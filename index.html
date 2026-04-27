@@ -1,156 +1,5 @@
-<?php
-session_start();
-
-// ==========================================
-// 1. CONFIGURATION & BASE DE DONNÉES
-// ==========================================
-$admin_password = 'maroc'; // Mot de passe de l'admin
-$upload_dir = 'uploads/';
-
-if (!file_exists($upload_dir)) {
-    mkdir($upload_dir, 0777, true);
-}
-
-// Connexion SQLite
-$db = new PDO('sqlite:database.sqlite');
-$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-$db->exec("CREATE TABLE IF NOT EXISTS articles (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    titre TEXT,
-    categorie TEXT,
-    extrait TEXT,
-    date_pub TEXT,
-    image_path TEXT
-)");
-
-// ==========================================
-// 2. LOGIQUE D'ADMINISTRATION
-// ==========================================
-if (isset($_POST['login'])) {
-    if ($_POST['password'] === $admin_password) {
-        $_SESSION['logged_in'] = true;
-    } else {
-        $error = "Mot de passe incorrect.";
-    }
-}
-
-if (isset($_GET['logout'])) {
-    session_destroy();
-    header("Location: ?admin=1");
-    exit;
-}
-
-if (isset($_POST['add_article']) && isset($_SESSION['logged_in'])) {
-    $titre = $_POST['titre'];
-    $categorie = $_POST['categorie'];
-    $extrait = $_POST['extrait'];
-    $date_pub = $_POST['date_pub'];
-    $image_path = '';
-
-    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-        $filename = time() . '_' . basename($_FILES['image']['name']);
-        $target_file = $upload_dir . $filename;
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $target_file)) {
-            $image_path = $target_file;
-        }
-    }
-
-    $stmt = $db->prepare("INSERT INTO articles (titre, categorie, extrait, date_pub, image_path) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$titre, $categorie, $extrait, $date_pub, $image_path]);
-    header("Location: ?admin=1"); // Rafraichir pour éviter le double envoi
-    exit;
-}
-
-if (isset($_GET['delete']) && isset($_SESSION['logged_in'])) {
-    $id = $_GET['delete'];
-    $db->prepare("DELETE FROM articles WHERE id = ?")->execute([$id]);
-    header("Location: ?admin=1");
-    exit;
-}
-
-// Récupérer les articles
-$articles = $db->query("SELECT * FROM articles ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
-
-// ==========================================
-// 3. AFFICHAGE DE LA PAGE ADMIN (?admin=1)
-// ==========================================
-if (isset($_GET['admin'])):
-?>
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Administration - Cassetta Maroc</title>
-    <style>
-        body { font-family: sans-serif; background: #0a0a0a; color: #fff; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: #111; padding: 30px; border: 1px solid #2a2a2a; }
-        input, textarea { width: 100%; padding: 10px; margin-bottom: 15px; background: #181818; border: 1px solid #2a2a2a; color: white; box-sizing: border-box; }
-        button { background: #03a74e; color: white; border: none; padding: 12px 20px; cursor: pointer; text-transform: uppercase; font-weight: bold; letter-spacing: 2px; }
-        .article-item { display: flex; justify-content: space-between; border-bottom: 1px solid #2a2a2a; padding: 15px 0; }
-        .delete-btn { background: #ff4444; color: white; text-decoration: none; padding: 5px 10px; font-size: 12px; }
-        a { color: #03a74e; text-decoration: none; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <?php if (!isset($_SESSION['logged_in'])): ?>
-            <form method="POST" style="text-align: center;">
-                <h2 style="color: #03a74e; margin-bottom: 20px;">ACCÈS ARCHIVES</h2>
-                <input type="password" name="password" placeholder="Mot de passe" required>
-                <button type="submit" name="login" style="width: 100%;">Se connecter</button>
-                <?php if(isset($error)) echo "<p style='color:red; margin-top:10px;'>$error</p>"; ?>
-            </form>
-        <?php else: ?>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid #2a2a2a; padding-bottom: 20px;">
-                <h2 style="color: #03a74e;">Tableau de bord</h2>
-                <div>
-                    <a href="?logout=1" style="color: #888; margin-right: 15px;">Déconnexion</a>
-                    <a href="index.php">Voir le site →</a>
-                </div>
-            </div>
-
-            <form method="POST" enctype="multipart/form-data">
-                <label style="color:#888; font-size: 12px; text-transform: uppercase;">Titre de l'article</label>
-                <input type="text" name="titre" required>
-
-                <label style="color:#888; font-size: 12px; text-transform: uppercase;">Catégorie (ex: Artists, Culture, Regional)</label>
-                <input type="text" name="categorie" required>
-
-                <label style="color:#888; font-size: 12px; text-transform: uppercase;">Date (ex: Mai 2026)</label>
-                <input type="text" name="date_pub" required>
-
-                <label style="color:#888; font-size: 12px; text-transform: uppercase;">Description courte</label>
-                <textarea name="extrait" rows="4" required></textarea>
-
-                <label style="color:#888; font-size: 12px; text-transform: uppercase;">Image de couverture (Optionnel)</label><br>
-                <input type="file" name="image" accept="image/*" style="margin-top: 5px;">
-
-                <button type="submit" name="add_article">Ajouter à l'archive</button>
-            </form>
-
-            <h3 style="margin-top: 40px; color: #03a74e;">Bandes enregistrées (<?= count($articles) ?>)</h3>
-            <?php foreach($articles as $art): ?>
-                <div class="article-item">
-                    <span><strong><?= htmlspecialchars($art['titre']) ?></strong> <span style="color:#888; font-size: 12px;">(<?= htmlspecialchars($art['categorie']) ?>)</span></span>
-                    <a href="?admin=1&delete=<?= $art['id'] ?>" class="delete-btn" onclick="return confirm('Supprimer définitivement cet article ?')">Supprimer</a>
-                </div>
-            <?php endforeach; ?>
-            <?php if(empty($articles)) echo "<p style='color:#888; font-style:italic;'>L'archive est vide.</p>"; ?>
-        <?php endif; ?>
-    </div>
-</body>
-</html>
-
-<?php
-// On arrête le script ici si on est sur la page admin
-exit;
-endif;
-// ==========================================
-// 4. AFFICHAGE DU SITE PUBLIC (Front-end)
-// ==========================================
-?>
-<!DOCTYPE html>
-<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -158,12 +7,11 @@ endif;
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
   <style>
-    /* TON CSS EXACT A ÉTÉ CONSERVÉ ICI */
+    /* --- STYLES ORIGINAUX --- */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg: #0a0a0a; --bg2: #111111; --bg3: #181818;
       --green: #03a74e; --green2: #05c95e;
-      --green-dim: rgba(3,167,78,0.12); --green-border: rgba(3,167,78,0.35);
       --white: #f5f5f0; --gray: #888; --dim: #2a2a2a;
       --font-d: 'Bebas Neue', Impact, sans-serif;
       --font-b: 'Lora', Georgia, serif;
@@ -173,307 +21,327 @@ endif;
     body { background: var(--bg); color: var(--white); font-family: var(--font-b); font-size: 17px; line-height: 1.7; overflow-x: hidden; }
 
     nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; padding: 0 2.5rem; height: 64px; background: rgba(10,10,10,0.94); border-bottom: 1px solid var(--dim); backdrop-filter: blur(10px); }
-    .logo-img { height: 34px; width: auto; }
+    .logo-img { height: 34px; width: auto; cursor: pointer; }
     .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
     .nav-links a { font-family: var(--font-m); font-size: 0.63rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray); text-decoration: none; transition: color 0.2s; }
     .nav-links a:hover { color: var(--green2); }
-    .nav-cta { color: var(--bg) !important; background: var(--green); padding: 0.45rem 1.1rem; transition: background 0.2s !important; }
-    .nav-cta:hover { background: var(--green2) !important; }
+    .nav-cta { color: var(--bg) !important; background: var(--green); padding: 0.45rem 1.1rem; transition: background 0.2s !important; border: none; cursor: pointer; font-family: var(--font-m); font-size: 0.63rem; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none;}
 
     .hero { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding-top: 64px; border-bottom: 1px solid var(--dim); overflow: hidden; }
-    .hero-left { padding: 5rem 3rem 5rem 4rem; display: flex; flex-direction: column; }
+    .hero-left { padding: 5rem 3rem 5rem 4rem; }
     .hero-tag { font-family: var(--font-m); font-size: 0.6rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--green); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
-    .hero-tag::before { content: ''; display: block; width: 28px; height: 1px; background: var(--green); }
-    .hero h1 { font-family: var(--font-d); font-size: clamp(5rem, 8.5vw, 9rem); line-height: 0.9; letter-spacing: 0.01em; color: var(--white); }
+    .hero h1 { font-family: var(--font-d); font-size: clamp(5rem, 8.5vw, 9rem); line-height: 0.9; color: var(--white); }
     .hero h1 .g { color: var(--green); }
-    .hero-sub { font-family: var(--font-b); font-style: italic; font-size: 1.05rem; color: var(--gray); max-width: 400px; margin: 2rem 0; line-height: 1.8; }
-    .hero-btns { display: flex; gap: 1rem; }
-    .btn-p { font-family: var(--font-m); font-size: 0.63rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--bg); background: var(--green); padding: 0.85rem 2rem; text-decoration: none; transition: background 0.2s; }
-    .btn-p:hover { background: var(--green2); }
-    .btn-s { font-family: var(--font-m); font-size: 0.63rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--white); border: 1px solid var(--dim); padding: 0.85rem 2rem; text-decoration: none; transition: border-color 0.2s, color 0.2s; }
-    .btn-s:hover { border-color: var(--green); color: var(--green); }
+    .hero-sub { font-family: var(--font-b); font-style: italic; font-size: 1.05rem; color: var(--gray); max-width: 400px; margin: 2rem 0; }
 
-    .hero-right { position: relative; height: 100%; min-height: 100vh; background: var(--bg2); border-left: 1px solid var(--dim); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .hero-right { position: relative; height: 100%; min-height: 100vh; background: var(--bg2); border-left: 1px solid var(--dim); display: flex; align-items: center; justify-content: center; }
     .hero-bg-txt { position: absolute; font-family: var(--font-d); font-size: 20vw; color: rgba(3,167,78,0.04); white-space: nowrap; pointer-events: none; letter-spacing: 0.05em; user-select: none; }
-    .cassette-wrap { position: relative; animation: fl 4s ease-in-out infinite; z-index: 2; }
-    @keyframes fl { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
 
     .ticker { background: var(--green); overflow: hidden; padding: 0.65rem 0; }
     .ticker-inner { display: flex; gap: 3rem; width: max-content; animation: tick 25s linear infinite; }
-    .ticker-item { font-family: var(--font-m); font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bg); white-space: nowrap; display: flex; align-items: center; gap: 0.75rem; font-weight: 500; }
-    .ticker-item::before { content: '▶'; font-size: 0.45rem; }
     @keyframes tick { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+    .ticker-item { font-family: var(--font-m); font-weight: bold; color: var(--bg); text-transform: uppercase; letter-spacing: 2px;}
 
     section { padding: 5.5rem 4rem; }
     .container { max-width: 1200px; margin: 0 auto; }
-    .lbl { font-family: var(--font-m); font-size: 0.57rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--green); display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem; }
-    .lbl::after { content: ''; flex: 1; max-width: 36px; height: 1px; background: var(--green); }
-    .sec-title { font-family: var(--font-d); font-size: clamp(3rem, 5vw, 5.5rem); letter-spacing: 0.02em; line-height: 0.92; color: var(--white); margin-bottom: 2.5rem; }
-
-    .feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--dim); border: 1px solid var(--dim); }
-    .feat-main { background: var(--bg2); padding: 3rem; display: flex; flex-direction: column; gap: 1.5rem; }
-    .tape-art { width: 100%; height: 200px; background: var(--bg3); border: 1px solid var(--dim); display: flex; align-items: center; justify-content: center; overflow: hidden;}
-    .tape-art img { width: 100%; height: 100%; object-fit: cover; }
-    .itag { font-family: var(--font-m); font-size: 0.53rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--green); background: var(--green-dim); border: 1px solid var(--green-border); padding: 0.3rem 0.75rem; display: inline-block; width: fit-content; }
-    .feat-main h3 { font-family: var(--font-d); font-size: 2.6rem; letter-spacing: 0.02em; line-height: 1; color: var(--white); }
-    .feat-main p { font-family: var(--font-b); font-style: italic; color: var(--gray); font-size: 0.93rem; line-height: 1.8; }
-    .rlink { font-family: var(--font-m); font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; width: fit-content; border-bottom: 1px solid var(--green-border); padding-bottom: 2px; transition: color 0.2s; }
-    .rlink:hover { color: var(--green2); }
-    .feat-aside { background: var(--bg2); display: flex; flex-direction: column; }
-    .sc { padding: 2rem 2.5rem; border-bottom: 1px solid var(--dim); flex: 1; transition: background 0.2s; cursor: pointer; }
-    .sc:last-child { border-bottom: none; }
-    .sc:hover { background: var(--bg3); }
-    .sc-n { font-family: var(--font-d); font-size: 3rem; color: var(--dim); line-height: 1; margin-bottom: 0.4rem; }
-    .sc h4 { font-family: var(--font-d); font-size: 1.45rem; letter-spacing: 0.02em; color: var(--white); margin-bottom: 0.4rem; }
-    .sc p { font-family: var(--font-b); font-style: italic; font-size: 0.85rem; color: var(--gray); }
-
-    .bg2s { background: var(--bg2); border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim); }
-    .cat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--dim); border: 1px solid var(--dim); }
-    .cat-box { background: var(--bg); padding: 2.5rem 2rem; cursor: pointer; transition: background 0.2s; position: relative; overflow: hidden; }
-    .cat-box::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--green); transform: scaleX(0); transition: transform 0.3s; transform-origin: left; }
-    .cat-box:hover { background: var(--bg2); }
-    .cat-box:hover::after { transform: scaleX(1); }
-    .cat-n { font-family: var(--font-m); font-size: 0.53rem; letter-spacing: 0.2em; color: var(--dim); margin-bottom: 0.7rem; }
-    .cat-name { font-family: var(--font-d); font-size: 1.6rem; letter-spacing: 0.02em; color: var(--white); margin-bottom: 0.4rem; }
-    .cat-desc { font-family: var(--font-b); font-style: italic; font-size: 0.83rem; color: var(--gray); }
+    .sec-title { font-family: var(--font-d); font-size: clamp(3rem, 5vw, 5.5rem); color: var(--white); margin-bottom: 2.5rem; line-height: 1; }
 
     .blog-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--dim); border: 1px solid var(--dim); }
     .bc { background: var(--bg2); padding: 2.5rem 2rem; display: flex; flex-direction: column; gap: 0.75rem; transition: background 0.2s; cursor: pointer; }
     .bc:hover { background: var(--bg3); }
-    .bc:hover .arr { color: var(--green); }
     .ccat { font-family: var(--font-m); font-size: 0.53rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--green); }
     .cn { font-family: var(--font-d); font-size: 4rem; color: var(--dim); line-height: 1; }
-    .bc h4 { font-family: var(--font-d); font-size: 1.35rem; letter-spacing: 0.02em; line-height: 1.1; color: var(--white); }
-    .bc p { font-family: var(--font-b); font-style: italic; font-size: 0.87rem; color: var(--gray); line-height: 1.75; flex: 1; }
-    .cfoot { display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--dim); }
-    .cdate { font-family: var(--font-m); font-size: 0.53rem; letter-spacing: 0.15em; color: var(--dim); }
-    .arr { font-size: 0.85rem; color: var(--dim); transition: color 0.2s; }
+    .bc h4 { font-family: var(--font-d); font-size: 1.35rem; color: var(--white); }
+    .bc p { font-family: var(--font-b); font-style: italic; font-size: 0.87rem; color: var(--gray); }
+    .cfoot { margin-top: auto; display: flex; justify-content: space-between; font-family: var(--font-m); font-size: 0.6rem; color: var(--gray); }
 
-    .about-inner { display: grid; grid-template-columns: 1fr 1.6fr; gap: 5rem; align-items: center; }
-    .alogo { background: var(--bg3); border: 1px solid var(--dim); display: flex; align-items: center; justify-content: center; padding: 4rem 3rem; position: relative; }
-    .alogo::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--green); }
-    .alogo img { width: 100%; max-width: 240px; }
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--dim); border: 1px solid var(--dim); border-top: none; }
-    .stat { background: var(--bg2); padding: 1.5rem 1rem; text-align: center; }
-    .stat-n { font-family: var(--font-d); font-size: 2.8rem; color: var(--green); letter-spacing: 0.02em; line-height: 1; }
-    .stat-l { font-family: var(--font-m); font-size: 0.53rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray); margin-top: 0.25rem; }
-    .at h3 { font-family: var(--font-d); font-size: 2.5rem; letter-spacing: 0.02em; line-height: 1; color: var(--white); margin-bottom: 1.5rem; }
-    .at h3 span { color: var(--green); }
-    .at p { font-family: var(--font-b); font-style: italic; color: var(--gray); margin-bottom: 1.2rem; line-height: 1.85; }
+    /* --- VUE ARTICLE SEUL --- */
+    #article-view { display: none; padding: 120px 4rem 5rem 4rem; min-height: 100vh; }
+    .article-header { max-width: 800px; margin: 0 auto 3rem auto; text-align: center; }
+    .article-header h1 { font-family: var(--font-d); font-size: 4.5rem; line-height: 1; margin: 1rem 0; }
+    .article-body { max-width: 750px; margin: 0 auto; font-size: 1.1rem; line-height: 1.8; color: #ddd; }
+    .article-body p { margin-bottom: 1.5rem; }
+    .btn-back { background: transparent; border: 1px solid var(--dim); color: var(--white); padding: 10px 20px; font-family: var(--font-m); cursor: pointer; margin-bottom: 2rem; transition: 0.2s; }
+    .btn-back:hover { border-color: var(--green); color: var(--green); }
 
-    .sub-bg { background: var(--green); }
-    .sub-inner { display: flex; align-items: center; justify-content: space-between; gap: 3rem; padding: 4rem; max-width: 1200px; margin: 0 auto; }
-    .sub-txt h2 { font-family: var(--font-d); font-size: 3.5rem; letter-spacing: 0.02em; line-height: 1; color: var(--bg); }
-    .sub-txt p { font-family: var(--font-b); font-style: italic; color: rgba(0,0,0,0.6); margin-top: 0.4rem; }
-    .sub-form { display: flex; min-width: 400px; }
-    .sub-form input { flex: 1; background: rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.25); border-right: none; outline: none; padding: 1rem 1.25rem; font-family: var(--font-m); font-size: 0.68rem; letter-spacing: 0.1em; color: var(--bg); caret-color: var(--bg); }
-    .sub-form input::placeholder { color: rgba(0,0,0,0.4); }
-    .sub-form button { background: var(--bg); border: 1px solid var(--bg); padding: 1rem 1.5rem; font-family: var(--font-m); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); cursor: pointer; transition: background 0.2s; white-space: nowrap; }
-    .sub-form button:hover { background: #111; }
+    /* --- STYLES ADMIN --- */
+    #admin-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; overflow-y: auto; padding: 50px 20px; }
+    .admin-container { max-width: 800px; margin: 0 auto; background: var(--bg2); border: 1px solid var(--green); padding: 30px; font-family: var(--font-m); }
+    .admin-container h2 { font-family: var(--font-d); color: var(--green); font-size: 2.5rem; margin-bottom: 20px; border-bottom: 1px solid var(--dim); padding-bottom: 10px; }
+    .admin-group { margin-bottom: 25px; border-bottom: 1px solid var(--dim); padding-bottom: 20px; }
+    label { display: block; font-size: 0.7rem; text-transform: uppercase; color: var(--gray); margin-bottom: 8px; letter-spacing: 1px; }
+    input, textarea { width: 100%; background: var(--bg); border: 1px solid var(--dim); color: white; padding: 12px; margin-bottom: 15px; font-family: var(--font-m); }
+    .btn-save { background: var(--green); border: none; padding: 10px 20px; cursor: pointer; font-family: var(--font-m); font-weight: bold; }
+    .btn-close { background: var(--white); border: none; padding: 10px 20px; cursor: pointer; font-family: var(--font-m); }
+    .art-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--bg); margin-bottom: 5px; border: 1px solid var(--dim); }
+    .btn-del { background: #ce1212; color: white; border: none; padding: 5px 10px; cursor: pointer; font-size: 10px; }
 
-    footer { background: var(--bg); border-top: 1px solid var(--dim); padding: 1.75rem 4rem; display: flex; align-items: center; justify-content: space-between; }
-    footer img { height: 28px; }
-    .fcopy { font-family: var(--font-m); font-size: 0.53rem; letter-spacing: 0.15em; color: var(--dim); }
-    .flinks { display: flex; gap: 1.5rem; }
-    .flinks a { font-family: var(--font-m); font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray); text-decoration: none; transition: color 0.2s; }
-    .flinks a:hover { color: var(--green); }
+    #login-box { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1001; background: var(--bg2); border: 1px solid var(--green); padding: 40px; width: 320px; }
   </style>
 </head>
 <body>
 
-<nav>
-  <img class="logo-img" src="logo.png" alt="Cassetta Maroc" />
-  <ul class="nav-links">
-    <li><a href="#articles">Articles</a></li>
-    <li><a href="#categories">Explore</a></li>
-    <li><a href="#about">About</a></li>
-    <li><a href="#subscribe" class="nav-cta">Subscribe</a></li>
-    <li><a href="?admin=1" style="color:var(--dim);">Admin</a></li>
-  </ul>
-</nav>
+<div id="login-box">
+  <h3 style="font-family: var(--font-d); color: var(--green); font-size: 2rem; margin-bottom: 1rem;">CONNEXION</h3>
+  <input type="text" id="adm-user" placeholder="Utilisateur (admin)">
+  <input type="password" id="adm-pass" placeholder="Mot de passe (admin123)">
+  <button class="btn-save" style="width:100%" onclick="attemptLogin()">ENTRER</button>
+  <button class="btn-close" style="width:100%; margin-top:10px; background:transparent; color:white;" onclick="hideLogin()">ANNULER</button>
+</div>
 
-<header class="hero">
-  <div class="hero-left">
-    <p class="hero-tag">Moroccan Tapes · Est. Agadir</p>
-    <h1>THE<br><span class="g">SOUND</span><br>OF MAROC</h1>
-    <p class="hero-sub">A journal dedicated to the cassette tapes, artists, and stories that shaped Moroccan music culture.</p>
-    <div class="hero-btns">
-      <a href="#articles" class="btn-p">Explore Articles</a>
-      <a href="#categories" class="btn-s">Browse Genres</a>
+<div id="admin-overlay">
+  <div class="admin-container">
+    <h2>PANNEAU D'ADMINISTRATION</h2>
+    
+    <div class="admin-group">
+      <p style="color:var(--green); margin-bottom:15px">CONTENU ACCUEIL</p>
+      <label>Logo URL (ex: logo.png)</label>
+      <input type="text" id="edit-logo">
+      <label>Titre Principal</label>
+      <input type="text" id="edit-title">
+      <label>Sous-Titre</label>
+      <textarea id="edit-sub" rows="2"></textarea>
+      <button class="btn-save" onclick="saveHomeSettings()">SAUVEGARDER L'ACCUEIL</button>
     </div>
-  </div>
-  <div class="hero-right">
-    <div class="hero-bg-txt">كاسيتا</div>
-    <div class="cassette-wrap">
-      <svg width="320" height="210" viewBox="0 0 320 210" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="3" y="3" width="314" height="204" rx="10" fill="#111" stroke="#2a2a2a" stroke-width="1.5"/>
-        <rect x="82" y="18" width="156" height="96" rx="4" fill="#161616" stroke="#1e1e1e" stroke-width="1"/>
-        <rect x="82" y="18" width="156" height="5" fill="#03a74e"/>
-        <rect x="100" y="40" width="120" height="2.5" rx="1" fill="#03a74e" opacity="0.45"/>
-        <rect x="108" y="50" width="90" height="2" rx="1" fill="#2a2a2a"/>
-        <rect x="108" y="58" width="65" height="2" rx="1" fill="#2a2a2a"/>
-        <text x="160" y="82" fill="#03a74e" font-size="10" text-anchor="middle" font-family="'Bebas Neue', sans-serif" letter-spacing="3">CASSETTA MAROC</text>
-        <text x="160" y="99" fill="#444" font-size="6.5" text-anchor="middle" font-family="monospace" letter-spacing="2">SIDE A — 60 MIN</text>
-        <circle cx="82" cy="152" r="42" fill="#0d0d0d" stroke="#1e1e1e" stroke-width="1"/>
-        <circle cx="82" cy="152" r="27" fill="#111" stroke="#252525" stroke-width="1"/>
-        <circle cx="82" cy="152" r="7.5" fill="#03a74e"/>
-        <circle cx="82" cy="125" r="2.5" fill="#1e1e1e"/>
-        <circle cx="105" cy="139" r="2.5" fill="#1e1e1e"/>
-        <circle cx="105" cy="165" r="2.5" fill="#1e1e1e"/>
-        <circle cx="82" cy="179" r="2.5" fill="#1e1e1e"/>
-        <circle cx="59" cy="165" r="2.5" fill="#1e1e1e"/>
-        <circle cx="59" cy="139" r="2.5" fill="#1e1e1e"/>
-        <circle cx="238" cy="152" r="42" fill="#0d0d0d" stroke="#1e1e1e" stroke-width="1"/>
-        <circle cx="238" cy="152" r="27" fill="#111" stroke="#252525" stroke-width="1"/>
-        <circle cx="238" cy="152" r="7.5" fill="#03a74e"/>
-        <circle cx="238" cy="125" r="2.5" fill="#1e1e1e"/>
-        <circle cx="261" cy="139" r="2.5" fill="#1e1e1e"/>
-        <circle cx="261" cy="165" r="2.5" fill="#1e1e1e"/>
-        <circle cx="238" cy="179" r="2.5" fill="#1e1e1e"/>
-        <circle cx="215" cy="165" r="2.5" fill="#1e1e1e"/>
-        <circle cx="215" cy="139" r="2.5" fill="#1e1e1e"/>
-        <path d="M124 152 Q160 134 196 152" stroke="#03a74e" stroke-width="2" fill="none"/>
-        <rect x="145" y="188" width="30" height="10" rx="2" fill="#181818" stroke="#2a2a2a" stroke-width="1"/>
-      </svg>
-    </div>
-  </div>
-</header>
 
-<div class="ticker">
-  <div class="ticker-inner">
-    <div class="ticker-item">Chaâbi</div>
-    <div class="ticker-item">Gnawa</div>
-    <div class="ticker-item">Jil Jilala</div>
-    <div class="ticker-item">Rai Oranais</div>
-    <div class="ticker-item">Amazigh</div>
-    <div class="ticker-item">Andalous</div>
-    <div class="ticker-item">Nass El Ghiwane</div>
-    <div class="ticker-item">Desert Blues</div>
-    <div class="ticker-item">Moroccan Jazz</div>
+    <div class="admin-group">
+      <p style="color:var(--green); margin-bottom:15px">AJOUTER UN ARTICLE</p>
+      <input type="text" id="new-art-title" placeholder="Titre de l'article">
+      <div style="display:flex; gap:10px;">
+        <input type="text" id="new-art-cat" placeholder="Catégorie (ex: Gnawa)">
+        <input type="text" id="new-art-date" placeholder="Date (ex: Mai 2025)">
+      </div>
+      <label>Résumé (S'affiche sur l'accueil)</label>
+      <textarea id="new-art-desc" placeholder="Résumé court..." rows="2"></textarea>
+      
+      <label>Contenu complet de l'article (Vous pouvez utiliser des balises HTML comme <p>, <b>, <br>)</label>
+      <textarea id="new-art-content" placeholder="Écrivez le texte complet ici..." rows="10"></textarea>
+      
+      <button class="btn-save" onclick="addNewArticle()">PUBLIER L'ARTICLE</button>
+    </div>
+
+    <div class="admin-group">
+      <p style="color:var(--gray); margin-bottom:15px">GESTION DES ARTICLES</p>
+      <div id="admin-articles-list"></div>
+    </div>
+
+    <button class="btn-close" onclick="closeAdmin()">FERMER LE PANNEAU</button>
+    <button class="btn-close" style="background:transparent; color:red; float:right" onclick="logout()">DÉCONNEXION</button>
   </div>
 </div>
 
-<section id="articles">
-  <div class="container">
-    <p class="lbl">Featured Story</p>
-    <h2 class="sec-title">LATEST<br>ARTICLES</h2>
-    <div class="feat-grid">
-      <div class="feat-main">
-        <div class="tape-art">
-          <?php if(!empty($articles[0]['image_path'])): ?>
-              <img src="<?= htmlspecialchars($articles[0]['image_path']) ?>" alt="Article">
-          <?php else: ?>
-              <svg width="250" height="155" viewBox="0 0 250 155" fill="none">
-                <rect width="250" height="155" fill="#0d0d0d"/>
-                <rect x="8" y="8" width="234" height="139" rx="4" stroke="#1a1a1a" stroke-width="1"/>
-                <circle cx="66" cy="97" r="38" stroke="#03a74e" stroke-width="1.2"/>
-                <circle cx="66" cy="97" r="22" fill="#0a0a0a" stroke="#181818"/>
-                <circle cx="66" cy="97" r="5" fill="#03a74e"/>
-                <circle cx="184" cy="97" r="38" stroke="#03a74e" stroke-width="1.2"/>
-                <circle cx="184" cy="97" r="22" fill="#0a0a0a" stroke="#181818"/>
-                <circle cx="184" cy="97" r="5" fill="#03a74e"/>
-                <line x1="104" y1="97" x2="146" y2="97" stroke="#03a74e" stroke-width="1.5"/>
-                <rect x="104" y="20" width="42" height="18" rx="2" fill="#111" stroke="#1e1e1e"/>
-                <text x="125" y="32" fill="#03a74e" font-size="7" text-anchor="middle" font-family="monospace" letter-spacing="1">SIDE A</text>
-              </svg>
-          <?php endif; ?>
-        </div>
-        <span class="itag">Issue No. 01 · Music History</span>
-        <h3>THE GOLDEN AGE OF MOROCCAN CASSETTE CULTURE</h3>
-        <p>Through the souks of Casablanca and the medinas of Fès, the cassette tape democratized music like nothing before. Local artists pressed their voices onto magnetic ribbon, and a nation listened.</p>
-        <a href="#" class="rlink">Read Article →</a>
-      </div>
-      <div class="feat-aside">
-        <div class="sc">
-          <div class="sc-n">02</div>
-          <h4>NASS EL GHIWANE — A TAPE THAT SHOOK A NATION</h4>
-          <p>Revisiting the 1972 recordings that gave protest music its Moroccan voice.</p>
-        </div>
-        <div class="sc">
-          <div class="sc-n">03</div>
-          <h4>GNAWA TRANCE & THE HEALING CEREMONY</h4>
-          <p>The spiritual music of the Gnawa masters, recorded on cassette for the first time.</p>
-        </div>
+<nav>
+  <img class="logo-img" id="main-logo" src="logo.png" alt="Cassetta Maroc" onclick="showLogin()" title="Admin Access" />
+  <ul class="nav-links">
+    <li><a href="#" onclick="goHome()">Accueil</a></li>
+    <li><a href="#about">About</a></li>
+    <li><button class="nav-cta">Subscribe</button></li>
+  </ul>
+</nav>
+
+<div id="home-view">
+  <header class="hero">
+    <div class="hero-left">
+      <p class="hero-tag">Moroccan Tapes · Est. Agadir</p>
+      <h1 id="hero-title">THE<br><span class="g">SOUND</span><br>OF MAROC</h1>
+      <p class="hero-sub" id="hero-sub">A journal dedicated to the cassette tapes, artists, and stories that shaped Moroccan music culture.</p>
+    </div>
+    <div class="hero-right">
+      <div class="hero-bg-txt">كاسيتا</div>
+      <div class="cassette-wrap">
+         <svg width="300" height="180" viewBox="0 0 320 210" fill="none">
+          <rect x="3" y="3" width="314" height="204" rx="10" fill="#111" stroke="#2a2a2a" stroke-width="1.5"/>
+          <text x="160" y="82" fill="#03a74e" font-size="12" text-anchor="middle" font-family="'Bebas Neue'">CASSETTA MAROC</text>
+          <circle cx="82" cy="152" r="40" stroke="#03a74e" stroke-width="1"/>
+          <circle cx="238" cy="152" r="40" stroke="#03a74e" stroke-width="1"/>
+        </svg>
       </div>
     </div>
-  </div>
-</section>
+  </header>
 
-<section id="categories" class="bg2s">
-  <div class="container">
-    <p class="lbl">Browse by Theme</p>
-    <h2 class="sec-title">EXPLORE</h2>
-    <div class="cat-row">
-      <div class="cat-box">
-        <div class="cat-n">01</div>
-        <div class="cat-name">Artists & Legends</div>
-      </div>
-      <div class="cat-box">
-        <div class="cat-n">02</div>
-        <div class="cat-name">Tape Reviews</div>
-      </div>
-      <div class="cat-box">
-        <div class="cat-n">03</div>
-        <div class="cat-name">Regional Sounds</div>
-      </div>
-      <div class="cat-box">
-        <div class="cat-n">04</div>
-        <div class="cat-name">The Archive</div>
-      </div>
+  <div class="ticker">
+    <div class="ticker-inner">
+      <div class="ticker-item">Chaâbi</div><div class="ticker-item">Gnawa</div><div class="ticker-item">Amazigh</div><div class="ticker-item">Rai</div>
+      <div class="ticker-item">Chaâbi</div><div class="ticker-item">Gnawa</div><div class="ticker-item">Amazigh</div><div class="ticker-item">Rai</div>
     </div>
   </div>
-</section>
 
-<section>
-  <div class="container">
-    <p class="lbl">All Articles</p>
-    <h2 class="sec-title">FROM THE<br>ARCHIVE</h2>
-    <div class="blog-grid">
-      
-      <?php if(empty($articles)): ?>
-          <p style="color: var(--gray); font-style: italic; grid-column: 1 / -1;">Aucune bande enregistrée pour le moment. Allez dans l'admin pour en ajouter.</p>
-      <?php else: ?>
-          <?php foreach($articles as $index => $article): ?>
-          <div class="bc">
-            <span class="ccat"><?= htmlspecialchars($article['categorie']) ?></span>
-            <div class="cn"><?= str_pad($index + 1, 2, '0', STR_PAD_LEFT) ?></div>
-            <h4><?= htmlspecialchars($article['titre']) ?></h4>
-            <p><?= nl2br(htmlspecialchars($article['extrait'])) ?></p>
-            <div class="cfoot"><span class="cdate"><?= htmlspecialchars($article['date_pub']) ?></span><span class="arr">→</span></div>
-          </div>
-          <?php endforeach; ?>
-      <?php endif; ?>
-      
-    </div>
-  </div>
-</section>
-
-<section id="about" class="bg2s">
-  <div class="container">
-    <p class="lbl">About</p>
-    <h2 class="sec-title">WHO<br>WE ARE</h2>
-    <div class="about-inner">
-      <div>
-        <div class="alogo"><img src="logo.png" alt="Cassetta Maroc" /></div>
-        <div class="stats-row">
-          <div class="stat"><div class="stat-n"><?= max(40, count($articles)) ?>+</div><div class="stat-l">Articles</div></div>
-          <div class="stat"><div class="stat-n">12</div><div class="stat-l">Genres</div></div>
-          <div class="stat"><div class="stat-n">80s</div><div class="stat-l">Era Focus</div></div>
+  <section id="articles">
+    <div class="container">
+      <h2 class="sec-title">ARCHIVE DES ARTICLES</h2>
+      <div class="blog-grid" id="main-blog-grid">
         </div>
-      </div>
-      <div class="at">
-        <h3>PRESERVING THE MAGNETIC <span>MEMORY</span> OF A CULTURE</h3>
-        <p>Cassetta Maroc is an independent journal dedicated to the rich, underexplored history of cassette music in Morocco.</p>
-        <a href="#articles" class="btn-p" style="margin-top:1rem; display:inline-block;">Read Our Story</a>
-      </div>
     </div>
-  </div>
-</section>
+  </section>
+</div>
 
-<footer>
-  <img src="logo.png" alt="Cassetta Maroc" />
-  <div class="fcopy">© 2026 Cassetta Maroc · All rights reserved</div>
-</footer>
+<div id="article-view">
+  <div class="container">
+    <button class="btn-back" onclick="goHome()">← RETOUR AUX ARTICLES</button>
+    <div class="article-header">
+      <span class="ccat" id="read-cat">Catégorie</span>
+      <h1 id="read-title">Titre de l'article</h1>
+      <p style="color:var(--gray); font-family:var(--font-m);" id="read-date">Date</p>
+    </div>
+    <div class="article-body" id="read-content">
+      </div>
+  </div>
+</div>
+
+<script>
+  const ADMIN_CREDENTIALS = { user: "admin", pass: "admin123" };
+
+  // Données par défaut avec un exemple de contenu complet
+  let siteData = JSON.parse(localStorage.getItem('cassetta_data')) || {
+    home: {
+      logo: "logo.png",
+      title: "THE SOUND OF MAROC",
+      sub: "A journal dedicated to the cassette tapes, artists, and stories that shaped Moroccan music culture."
+    },
+    articles: [
+      { 
+        id: 1, 
+        title: "JIL JILALA & THE SOUND OF SOUL", 
+        cat: "Artists", 
+        date: "April 2025", 
+        desc: "How a band from Casablanca redefined the spiritual song.",
+        content: "<p>Jil Jilala emerged in the early 1970s in Casablanca, quickly becoming one of the most influential groups in Moroccan music history. Unlike traditional ensembles, they brought a raw, theatrical energy to their performances.</p><p>Their use of acoustic instruments like the guembri, bendir, and bouzouki created a trance-like rhythm that resonated with the youth. Their cassette tapes were traded vigorously in the souks, making their music a grassroots phenomenon before it ever reached national television.</p><p>Today, finding an original 1970s Jil Jilala tape is considered a holy grail for collectors of Moroccan audio history.</p>" 
+      },
+      { 
+        id: 2, 
+        title: "THE SOUK CASSETTE ECONOMY", 
+        cat: "Culture", 
+        date: "March 2025", 
+        desc: "Before streaming, the marketplace was the playlist.",
+        content: "<p>In the 1980s and 90s, the Moroccan music industry was not run by corporate executives in glass buildings, but by vendors in the bustling souks of Casablanca, Marrakech, and Fès.</p><p>Piracy was rampant, but it was also the primary distribution network. A vendor with a dual-deck boombox was the ultimate tastemaker, creating custom mixtapes for taxi drivers and shopkeepers.</p>" 
+      }
+    ]
+  };
+
+  // --- MISE À JOUR DE L'INTERFACE ---
+  function updateUI() {
+    // 1. Accueil
+    document.getElementById('main-logo').src = siteData.home.logo;
+    const titleParts = siteData.home.title.split(' ');
+    let formattedTitle = siteData.home.title;
+    if(titleParts.length >= 2) {
+        formattedTitle = `${titleParts[0]}<br><span class="g">${titleParts[1]}</span><br>${titleParts.slice(2).join(' ')}`;
+    }
+    document.getElementById('hero-title').innerHTML = formattedTitle;
+    document.getElementById('hero-sub').innerText = siteData.home.sub;
+
+    // 2. Grille d'articles
+    const grid = document.getElementById('main-blog-grid');
+    grid.innerHTML = siteData.articles.map((art, idx) => `
+      <div class="bc" onclick="readArticle(${art.id})">
+        <span class="ccat">${art.cat}</span>
+        <div class="cn">0${idx + 1}</div>
+        <h4>${art.title}</h4>
+        <p>${art.desc}</p>
+        <div class="cfoot"><span class="cdate">${art.date}</span><span class="arr">LIRE →</span></div>
+      </div>
+    `).join('');
+
+    // 3. Panneau Admin (Remplir les champs et la liste)
+    const adminList = document.getElementById('admin-articles-list');
+    adminList.innerHTML = siteData.articles.map(art => `
+      <div class="art-item">
+        <span>${art.title}</span>
+        <button class="btn-del" onclick="deleteArticle(${art.id})">SUPPRIMER</button>
+      </div>
+    `).join('');
+
+    document.getElementById('edit-logo').value = siteData.home.logo;
+    document.getElementById('edit-title').value = siteData.home.title;
+    document.getElementById('edit-sub').value = siteData.home.sub;
+
+    // Sauvegarder dans le navigateur
+    localStorage.setItem('cassetta_data', JSON.stringify(siteData));
+  }
+
+  // --- NAVIGATION (Accueil <-> Article) ---
+  function readArticle(id) {
+    const article = siteData.articles.find(a => a.id === id);
+    if(!article) return;
+
+    // Cacher l'accueil, afficher l'article
+    document.getElementById('home-view').style.display = 'none';
+    document.getElementById('article-view').style.display = 'block';
+    window.scrollTo(0, 0); // Remonter en haut de la page
+
+    // Remplir les données de l'article
+    document.getElementById('read-cat').innerText = article.cat;
+    document.getElementById('read-title').innerText = article.title;
+    document.getElementById('read-date').innerText = article.date;
+    
+    // Convertir les retours à la ligne en paragraphes basiques si ce n'est pas déjà de l'HTML
+    let contentHtml = article.content || "<p>Contenu non disponible.</p>";
+    if(!contentHtml.includes('<p>') && !contentHtml.includes('<br>')) {
+        contentHtml = `<p>${contentHtml.replace(/\n/g, '<br>')}</p>`;
+    }
+    document.getElementById('read-content').innerHTML = contentHtml;
+  }
+
+  function goHome() {
+    document.getElementById('article-view').style.display = 'none';
+    document.getElementById('home-view').style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  // --- FONCTIONS ADMIN ---
+  function showLogin() { document.getElementById('login-box').style.display = 'block'; }
+  function hideLogin() { document.getElementById('login-box').style.display = 'none'; }
+
+  function attemptLogin() {
+    if(document.getElementById('adm-user').value === ADMIN_CREDENTIALS.user && 
+       document.getElementById('adm-pass').value === ADMIN_CREDENTIALS.pass) {
+      hideLogin();
+      document.getElementById('admin-overlay').style.display = 'block';
+    } else { alert("Identifiants incorrects"); }
+  }
+
+  function logout() { location.reload(); }
+  function closeAdmin() { document.getElementById('admin-overlay').style.display = 'none'; }
+
+  function saveHomeSettings() {
+    siteData.home.logo = document.getElementById('edit-logo').value || "logo.png";
+    siteData.home.title = document.getElementById('edit-title').value;
+    siteData.home.sub = document.getElementById('edit-sub').value;
+    updateUI();
+    alert("Accueil mis à jour !");
+  }
+
+  function addNewArticle() {
+    const title = document.getElementById('new-art-title').value;
+    const cat = document.getElementById('new-art-cat').value;
+    const date = document.getElementById('new-art-date').value;
+    const desc = document.getElementById('new-art-desc').value;
+    const content = document.getElementById('new-art-content').value;
+
+    if(!title) { alert("Le titre est obligatoire"); return; }
+
+    siteData.articles.push({ id: Date.now(), title, cat, date, desc, content });
+    updateUI();
+    
+    // Vider le formulaire
+    document.getElementById('new-art-title').value = "";
+    document.getElementById('new-art-cat').value = "";
+    document.getElementById('new-art-date').value = "";
+    document.getElementById('new-art-desc').value = "";
+    document.getElementById('new-art-content').value = "";
+    alert("Article publié avec succès !");
+  }
+
+  function deleteArticle(id) {
+    if(confirm("Voulez-vous vraiment supprimer cet article ?")) {
+      siteData.articles = siteData.articles.filter(a => a.id !== id);
+      updateUI();
+    }
+  }
+
+  // Initialisation au chargement
+  updateUI();
+</script>
 
 </body>
 </html>
