@@ -1,3 +1,154 @@
+<?php
+session_start();
+
+// ==========================================
+// 1. CONFIGURATION & BASE DE DONNÉES
+// ==========================================
+$admin_password = 'maroc'; // Mot de passe de l'admin
+$upload_dir = 'uploads/';
+
+if (!file_exists($upload_dir)) {
+    mkdir($upload_dir, 0777, true);
+}
+
+// Connexion SQLite
+$db = new PDO('sqlite:database.sqlite');
+$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$db->exec("CREATE TABLE IF NOT EXISTS articles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    titre TEXT,
+    categorie TEXT,
+    extrait TEXT,
+    date_pub TEXT,
+    image_path TEXT
+)");
+
+// ==========================================
+// 2. LOGIQUE D'ADMINISTRATION
+// ==========================================
+if (isset($_POST['login'])) {
+    if ($_POST['password'] === $admin_password) {
+        $_SESSION['logged_in'] = true;
+    } else {
+        $error = "Mot de passe incorrect.";
+    }
+}
+
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header("Location: ?admin=1");
+    exit;
+}
+
+if (isset($_POST['add_article']) && isset($_SESSION['logged_in'])) {
+    $titre = $_POST['titre'];
+    $categorie = $_POST['categorie'];
+    $extrait = $_POST['extrait'];
+    $date_pub = $_POST['date_pub'];
+    $image_path = '';
+
+    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+        $filename = time() . '_' . basename($_FILES['image']['name']);
+        $target_file = $upload_dir . $filename;
+        if (move_uploaded_file($_FILES['image']['tmp_name'], $target_file)) {
+            $image_path = $target_file;
+        }
+    }
+
+    $stmt = $db->prepare("INSERT INTO articles (titre, categorie, extrait, date_pub, image_path) VALUES (?, ?, ?, ?, ?)");
+    $stmt->execute([$titre, $categorie, $extrait, $date_pub, $image_path]);
+    header("Location: ?admin=1"); // Rafraichir pour éviter le double envoi
+    exit;
+}
+
+if (isset($_GET['delete']) && isset($_SESSION['logged_in'])) {
+    $id = $_GET['delete'];
+    $db->prepare("DELETE FROM articles WHERE id = ?")->execute([$id]);
+    header("Location: ?admin=1");
+    exit;
+}
+
+// Récupérer les articles
+$articles = $db->query("SELECT * FROM articles ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
+
+// ==========================================
+// 3. AFFICHAGE DE LA PAGE ADMIN (?admin=1)
+// ==========================================
+if (isset($_GET['admin'])):
+?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Administration - Cassetta Maroc</title>
+    <style>
+        body { font-family: sans-serif; background: #0a0a0a; color: #fff; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #111; padding: 30px; border: 1px solid #2a2a2a; }
+        input, textarea { width: 100%; padding: 10px; margin-bottom: 15px; background: #181818; border: 1px solid #2a2a2a; color: white; box-sizing: border-box; }
+        button { background: #03a74e; color: white; border: none; padding: 12px 20px; cursor: pointer; text-transform: uppercase; font-weight: bold; letter-spacing: 2px; }
+        .article-item { display: flex; justify-content: space-between; border-bottom: 1px solid #2a2a2a; padding: 15px 0; }
+        .delete-btn { background: #ff4444; color: white; text-decoration: none; padding: 5px 10px; font-size: 12px; }
+        a { color: #03a74e; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <?php if (!isset($_SESSION['logged_in'])): ?>
+            <form method="POST" style="text-align: center;">
+                <h2 style="color: #03a74e; margin-bottom: 20px;">ACCÈS ARCHIVES</h2>
+                <input type="password" name="password" placeholder="Mot de passe" required>
+                <button type="submit" name="login" style="width: 100%;">Se connecter</button>
+                <?php if(isset($error)) echo "<p style='color:red; margin-top:10px;'>$error</p>"; ?>
+            </form>
+        <?php else: ?>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid #2a2a2a; padding-bottom: 20px;">
+                <h2 style="color: #03a74e;">Tableau de bord</h2>
+                <div>
+                    <a href="?logout=1" style="color: #888; margin-right: 15px;">Déconnexion</a>
+                    <a href="index.php">Voir le site →</a>
+                </div>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data">
+                <label style="color:#888; font-size: 12px; text-transform: uppercase;">Titre de l'article</label>
+                <input type="text" name="titre" required>
+
+                <label style="color:#888; font-size: 12px; text-transform: uppercase;">Catégorie (ex: Artists, Culture, Regional)</label>
+                <input type="text" name="categorie" required>
+
+                <label style="color:#888; font-size: 12px; text-transform: uppercase;">Date (ex: Mai 2026)</label>
+                <input type="text" name="date_pub" required>
+
+                <label style="color:#888; font-size: 12px; text-transform: uppercase;">Description courte</label>
+                <textarea name="extrait" rows="4" required></textarea>
+
+                <label style="color:#888; font-size: 12px; text-transform: uppercase;">Image de couverture (Optionnel)</label><br>
+                <input type="file" name="image" accept="image/*" style="margin-top: 5px;">
+
+                <button type="submit" name="add_article">Ajouter à l'archive</button>
+            </form>
+
+            <h3 style="margin-top: 40px; color: #03a74e;">Bandes enregistrées (<?= count($articles) ?>)</h3>
+            <?php foreach($articles as $art): ?>
+                <div class="article-item">
+                    <span><strong><?= htmlspecialchars($art['titre']) ?></strong> <span style="color:#888; font-size: 12px;">(<?= htmlspecialchars($art['categorie']) ?>)</span></span>
+                    <a href="?admin=1&delete=<?= $art['id'] ?>" class="delete-btn" onclick="return confirm('Supprimer définitivement cet article ?')">Supprimer</a>
+                </div>
+            <?php endforeach; ?>
+            <?php if(empty($articles)) echo "<p style='color:#888; font-style:italic;'>L'archive est vide.</p>"; ?>
+        <?php endif; ?>
+    </div>
+</body>
+</html>
+
+<?php
+// On arrête le script ici si on est sur la page admin
+exit;
+endif;
+// ==========================================
+// 4. AFFICHAGE DU SITE PUBLIC (Front-end)
+// ==========================================
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +158,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
   <style>
+    /* TON CSS EXACT A ÉTÉ CONSERVÉ ICI */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg: #0a0a0a; --bg2: #111111; --bg3: #181818;
@@ -60,7 +212,8 @@
 
     .feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--dim); border: 1px solid var(--dim); }
     .feat-main { background: var(--bg2); padding: 3rem; display: flex; flex-direction: column; gap: 1.5rem; }
-    .tape-art { width: 100%; height: 200px; background: var(--bg3); border: 1px solid var(--dim); display: flex; align-items: center; justify-content: center; }
+    .tape-art { width: 100%; height: 200px; background: var(--bg3); border: 1px solid var(--dim); display: flex; align-items: center; justify-content: center; overflow: hidden;}
+    .tape-art img { width: 100%; height: 100%; object-fit: cover; }
     .itag { font-family: var(--font-m); font-size: 0.53rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--green); background: var(--green-dim); border: 1px solid var(--green-border); padding: 0.3rem 0.75rem; display: inline-block; width: fit-content; }
     .feat-main h3 { font-family: var(--font-d); font-size: 2.6rem; letter-spacing: 0.02em; line-height: 1; color: var(--white); }
     .feat-main p { font-family: var(--font-b); font-style: italic; color: var(--gray); font-size: 0.93rem; line-height: 1.8; }
@@ -135,6 +288,7 @@
     <li><a href="#categories">Explore</a></li>
     <li><a href="#about">About</a></li>
     <li><a href="#subscribe" class="nav-cta">Subscribe</a></li>
+    <li><a href="?admin=1" style="color:var(--dim);">Admin</a></li>
   </ul>
 </nav>
 
@@ -196,15 +350,6 @@
     <div class="ticker-item">Nass El Ghiwane</div>
     <div class="ticker-item">Desert Blues</div>
     <div class="ticker-item">Moroccan Jazz</div>
-    <div class="ticker-item">Chaâbi</div>
-    <div class="ticker-item">Gnawa</div>
-    <div class="ticker-item">Jil Jilala</div>
-    <div class="ticker-item">Rai Oranais</div>
-    <div class="ticker-item">Amazigh</div>
-    <div class="ticker-item">Andalous</div>
-    <div class="ticker-item">Nass El Ghiwane</div>
-    <div class="ticker-item">Desert Blues</div>
-    <div class="ticker-item">Moroccan Jazz</div>
   </div>
 </div>
 
@@ -215,20 +360,23 @@
     <div class="feat-grid">
       <div class="feat-main">
         <div class="tape-art">
-          <svg width="250" height="155" viewBox="0 0 250 155" fill="none">
-            <rect width="250" height="155" fill="#0d0d0d"/>
-            <rect x="8" y="8" width="234" height="139" rx="4" stroke="#1a1a1a" stroke-width="1"/>
-            <circle cx="66" cy="97" r="38" stroke="#03a74e" stroke-width="1.2"/>
-            <circle cx="66" cy="97" r="22" fill="#0a0a0a" stroke="#181818"/>
-            <circle cx="66" cy="97" r="5" fill="#03a74e"/>
-            <circle cx="184" cy="97" r="38" stroke="#03a74e" stroke-width="1.2"/>
-            <circle cx="184" cy="97" r="22" fill="#0a0a0a" stroke="#181818"/>
-            <circle cx="184" cy="97" r="5" fill="#03a74e"/>
-            <line x1="104" y1="97" x2="146" y2="97" stroke="#03a74e" stroke-width="1.5"/>
-            <rect x="104" y="20" width="42" height="18" rx="2" fill="#111" stroke="#1e1e1e"/>
-            <text x="125" y="32" fill="#03a74e" font-size="7" text-anchor="middle" font-family="monospace" letter-spacing="1">SIDE A</text>
-            <text x="125" y="148" fill="#3a3a3a" font-size="7" text-anchor="middle" font-family="monospace" letter-spacing="2">JIL JILALA · 1978</text>
-          </svg>
+          <?php if(!empty($articles[0]['image_path'])): ?>
+              <img src="<?= htmlspecialchars($articles[0]['image_path']) ?>" alt="Article">
+          <?php else: ?>
+              <svg width="250" height="155" viewBox="0 0 250 155" fill="none">
+                <rect width="250" height="155" fill="#0d0d0d"/>
+                <rect x="8" y="8" width="234" height="139" rx="4" stroke="#1a1a1a" stroke-width="1"/>
+                <circle cx="66" cy="97" r="38" stroke="#03a74e" stroke-width="1.2"/>
+                <circle cx="66" cy="97" r="22" fill="#0a0a0a" stroke="#181818"/>
+                <circle cx="66" cy="97" r="5" fill="#03a74e"/>
+                <circle cx="184" cy="97" r="38" stroke="#03a74e" stroke-width="1.2"/>
+                <circle cx="184" cy="97" r="22" fill="#0a0a0a" stroke="#181818"/>
+                <circle cx="184" cy="97" r="5" fill="#03a74e"/>
+                <line x1="104" y1="97" x2="146" y2="97" stroke="#03a74e" stroke-width="1.5"/>
+                <rect x="104" y="20" width="42" height="18" rx="2" fill="#111" stroke="#1e1e1e"/>
+                <text x="125" y="32" fill="#03a74e" font-size="7" text-anchor="middle" font-family="monospace" letter-spacing="1">SIDE A</text>
+              </svg>
+          <?php endif; ?>
         </div>
         <span class="itag">Issue No. 01 · Music History</span>
         <h3>THE GOLDEN AGE OF MOROCCAN CASSETTE CULTURE</h3>
@@ -246,11 +394,6 @@
           <h4>GNAWA TRANCE & THE HEALING CEREMONY</h4>
           <p>The spiritual music of the Gnawa masters, recorded on cassette for the first time.</p>
         </div>
-        <div class="sc">
-          <div class="sc-n">04</div>
-          <h4>THE AMAZIGH CASSETTE RENAISSANCE</h4>
-          <p>How Tamazight music found its way onto tape and into a diaspora's heart.</p>
-        </div>
       </div>
     </div>
   </div>
@@ -264,22 +407,18 @@
       <div class="cat-box">
         <div class="cat-n">01</div>
         <div class="cat-name">Artists & Legends</div>
-        <div class="cat-desc">Portraits of the voices that shaped a generation</div>
       </div>
       <div class="cat-box">
         <div class="cat-n">02</div>
         <div class="cat-name">Tape Reviews</div>
-        <div class="cat-desc">Deep dives into iconic cassette releases</div>
       </div>
       <div class="cat-box">
         <div class="cat-n">03</div>
         <div class="cat-name">Regional Sounds</div>
-        <div class="cat-desc">From the Atlas Mountains to the Atlantic</div>
       </div>
       <div class="cat-box">
         <div class="cat-n">04</div>
         <div class="cat-name">The Archive</div>
-        <div class="cat-desc">Lost recordings, rediscovered stories</div>
       </div>
     </div>
   </div>
@@ -290,48 +429,21 @@
     <p class="lbl">All Articles</p>
     <h2 class="sec-title">FROM THE<br>ARCHIVE</h2>
     <div class="blog-grid">
-      <div class="bc">
-        <span class="ccat">Artists</span>
-        <div class="cn">01</div>
-        <h4>JIL JILALA & THE SOUND OF MOROCCAN SOUL</h4>
-        <p>How a band from Casablanca redefined the spiritual song for modern Morocco.</p>
-        <div class="cfoot"><span class="cdate">April 2025</span><span class="arr">→</span></div>
-      </div>
-      <div class="bc">
-        <span class="ccat">Culture</span>
-        <div class="cn">02</div>
-        <h4>THE SOUK CASSETTE: MUSIC AT ONE DIRHAM</h4>
-        <p>Before streaming, the marketplace was the playlist. A look at the informal music economy of the 80s.</p>
-        <div class="cfoot"><span class="cdate">March 2025</span><span class="arr">→</span></div>
-      </div>
-      <div class="bc">
-        <span class="ccat">Regional</span>
-        <div class="cn">03</div>
-        <h4>GNAWA TRANCE & THE HEALING CEREMONY</h4>
-        <p>The spiritual music of the Gnawa masters, recorded on cassette for the very first time.</p>
-        <div class="cfoot"><span class="cdate">March 2025</span><span class="arr">→</span></div>
-      </div>
-      <div class="bc">
-        <span class="ccat">Review</span>
-        <div class="cn">04</div>
-        <h4>NASS EL GHIWANE: A TAPE THAT SHOOK A NATION</h4>
-        <p>Revisiting the legendary 1972 recordings that gave protest music its Moroccan voice.</p>
-        <div class="cfoot"><span class="cdate">February 2025</span><span class="arr">→</span></div>
-      </div>
-      <div class="bc">
-        <span class="ccat">Archive</span>
-        <div class="cn">05</div>
-        <h4>THE AMAZIGH CASSETTE RENAISSANCE</h4>
-        <p>How Tamazight music found its way onto tape and into the hearts of a diaspora.</p>
-        <div class="cfoot"><span class="cdate">February 2025</span><span class="arr">→</span></div>
-      </div>
-      <div class="bc">
-        <span class="ccat">History</span>
-        <div class="cn">06</div>
-        <h4>SIDE B: STORIES LEFT ON MAGNETIC TAPE</h4>
-        <p>Unreleased sessions, family recordings, and the private sounds of a country.</p>
-        <div class="cfoot"><span class="cdate">January 2025</span><span class="arr">→</span></div>
-      </div>
+      
+      <?php if(empty($articles)): ?>
+          <p style="color: var(--gray); font-style: italic; grid-column: 1 / -1;">Aucune bande enregistrée pour le moment. Allez dans l'admin pour en ajouter.</p>
+      <?php else: ?>
+          <?php foreach($articles as $index => $article): ?>
+          <div class="bc">
+            <span class="ccat"><?= htmlspecialchars($article['categorie']) ?></span>
+            <div class="cn"><?= str_pad($index + 1, 2, '0', STR_PAD_LEFT) ?></div>
+            <h4><?= htmlspecialchars($article['titre']) ?></h4>
+            <p><?= nl2br(htmlspecialchars($article['extrait'])) ?></p>
+            <div class="cfoot"><span class="cdate"><?= htmlspecialchars($article['date_pub']) ?></span><span class="arr">→</span></div>
+          </div>
+          <?php endforeach; ?>
+      <?php endif; ?>
+      
     </div>
   </div>
 </section>
@@ -344,42 +456,23 @@
       <div>
         <div class="alogo"><img src="logo.png" alt="Cassetta Maroc" /></div>
         <div class="stats-row">
-          <div class="stat"><div class="stat-n">40+</div><div class="stat-l">Articles</div></div>
+          <div class="stat"><div class="stat-n"><?= max(40, count($articles)) ?>+</div><div class="stat-l">Articles</div></div>
           <div class="stat"><div class="stat-n">12</div><div class="stat-l">Genres</div></div>
           <div class="stat"><div class="stat-n">80s</div><div class="stat-l">Era Focus</div></div>
         </div>
       </div>
       <div class="at">
         <h3>PRESERVING THE MAGNETIC <span>MEMORY</span> OF A CULTURE</h3>
-        <p>Cassetta Maroc is an independent journal dedicated to the rich, underexplored history of cassette music in Morocco. From the golden age of Chaâbi and Gnawa masters to the underground fusion scenes of the 90s, we believe these sounds deserve more than silence.</p>
-        <p>Each article is a love letter to the artists, the listeners, and the dusty tape players that kept the music alive through decades of change. We write for the curious, the nostalgic, and the converted.</p>
+        <p>Cassetta Maroc is an independent journal dedicated to the rich, underexplored history of cassette music in Morocco.</p>
         <a href="#articles" class="btn-p" style="margin-top:1rem; display:inline-block;">Read Our Story</a>
       </div>
     </div>
   </div>
 </section>
 
-<div class="sub-bg" id="subscribe">
-  <div class="sub-inner">
-    <div class="sub-txt">
-      <h2>STAY ON<br>THE TAPE</h2>
-      <p>New articles and rare finds, in your inbox.</p>
-    </div>
-    <div class="sub-form">
-      <input type="email" placeholder="your@email.com" />
-      <button type="button">Subscribe</button>
-    </div>
-  </div>
-</div>
-
 <footer>
   <img src="logo.png" alt="Cassetta Maroc" />
-  <div class="fcopy">© 2025 Cassetta Maroc · All rights reserved</div>
-  <div class="flinks">
-    <a href="https://www.instagram.com/cassetta.maroc/" target="_blank">Instagram</a>
-    <a href="#">Contact</a>
-    <a href="#">Privacy</a>
-  </div>
+  <div class="fcopy">© 2026 Cassetta Maroc · All rights reserved</div>
 </footer>
 
 </body>
