@@ -8,158 +8,136 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0a0a; --bg2: #111; --bg3: #181818;
-      --green: #03a74e; --green2: #05c95e;
-      --green-dim: rgba(3,167,78,0.1); --green-border: rgba(3,167,78,0.3);
+      --bg: #0a0a0a; --bg2: #111; --bg3: #181818; --bg4: #1e1e1e;
+      --green: #03a74e; --green2: #05c95e; --green-dim: rgba(3,167,78,0.1); --green-border: rgba(3,167,78,0.3);
       --white: #f5f5f0; --gray: #888; --dim: #2a2a2a; --red: #e03c3c;
       --font-d: 'Bebas Neue', Impact, sans-serif;
       --font-b: 'Lora', Georgia, serif;
       --font-m: 'IBM Plex Mono', monospace;
     }
-    body { background: var(--bg); color: var(--white); font-family: var(--font-m); min-height: 100vh; }
+    html, body { height: 100%; }
+    body { background: var(--bg); color: var(--white); font-family: var(--font-m); overflow: hidden; }
 
-    /* LOGIN */
-    #login-screen {
-      min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      flex-direction: column; gap: 2rem;
+    /* ── LOGIN ── */
+    #login-screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); z-index: 999; }
+    .login-box { border: 1px solid var(--dim); background: var(--bg2); padding: 3rem; display: flex; flex-direction: column; gap: 1.5rem; width: 360px; }
+    .login-logo { font-family: var(--font-d); font-size: 2rem; color: var(--green); letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+    .login-sub { font-size: 0.58rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); }
+    .login-err { color: var(--red); font-size: 0.57rem; letter-spacing: 0.15em; display: none; }
+    .hint { font-size: 0.52rem; letter-spacing: 0.12em; color: var(--dim); text-align: center; }
+    .hint span { color: var(--green); }
+
+    /* ── LAYOUT ── */
+    #admin { display: none; height: 100vh; flex-direction: column; }
+    .topbar { background: var(--bg2); border-bottom: 1px solid var(--dim); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 52px; flex-shrink: 0; }
+    .topbar-logo { font-family: var(--font-d); font-size: 1.3rem; color: var(--green); letter-spacing: 0.05em; }
+    .topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+
+    .main-layout { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── SIDEBAR NAV ── */
+    .sidenav { width: 200px; background: var(--bg2); border-right: 1px solid var(--dim); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
+    .sidenav-section { padding: 1rem 1rem 0.25rem; font-size: 0.5rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--dim); }
+    .sidenav-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; font-size: 0.6rem; letter-spacing: 0.15em; color: var(--gray); cursor: pointer; transition: background 0.15s, color 0.15s; border-left: 2px solid transparent; }
+    .sidenav-item:hover { background: var(--bg3); color: var(--white); }
+    .sidenav-item.active { background: var(--green-dim); color: var(--green); border-left-color: var(--green); }
+    .sidenav-item .icon { font-size: 0.85rem; width: 18px; text-align: center; }
+    .sidenav-divider { height: 1px; background: var(--dim); margin: 0.5rem 0; }
+
+    /* ── CONTENT AREA ── */
+    .content-area { flex: 1; overflow: hidden; display: flex; }
+
+    /* ── PANELS ── */
+    .panel { display: none; flex: 1; overflow-y: auto; }
+    .panel.active { display: flex; }
+
+    /* ── ARTICLES PANEL ── */
+    .articles-panel { flex-direction: row; }
+    .articles-list-col { width: 260px; border-right: 1px solid var(--dim); display: flex; flex-direction: column; flex-shrink: 0; background: var(--bg2); }
+    .col-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--dim); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .col-header-label { font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray); }
+    .art-list { flex: 1; overflow-y: auto; }
+    .art-item { padding: 1rem 1.25rem; border-bottom: 1px solid var(--dim); cursor: pointer; transition: background 0.15s; position: relative; }
+    .art-item:hover { background: var(--bg3); }
+    .art-item.sel { background: var(--green-dim); border-left: 2px solid var(--green); }
+    .art-item-title { font-family: var(--font-d); font-size: 0.95rem; letter-spacing: 0.02em; color: var(--white); margin-bottom: 0.2rem; line-height: 1.1; padding-right: 1.5rem; }
+    .art-item-meta { font-size: 0.5rem; letter-spacing: 0.12em; color: var(--dim); display: flex; gap: 0.5rem; }
+    .art-item-cat { color: var(--green); }
+    .art-del-btn { position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--dim); font-size: 0.7rem; cursor: pointer; padding: 0.25rem; transition: color 0.15s; }
+    .art-del-btn:hover { color: var(--red); }
+    .empty-list { padding: 2rem 1rem; text-align: center; color: var(--dim); font-size: 0.55rem; letter-spacing: 0.15em; line-height: 1.9; }
+
+    .art-editor-col { flex: 1; overflow-y: auto; }
+    .art-placeholder { flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 0.75rem; color: var(--dim); }
+    .art-placeholder h2 { font-family: var(--font-d); font-size: 2.5rem; color: #1c1c1c; letter-spacing: 0.02em; }
+    .art-placeholder p { font-size: 0.57rem; letter-spacing: 0.18em; text-transform: uppercase; }
+    .editor-inner { padding: 2rem 2.5rem; display: flex; flex-direction: column; gap: 1.25rem; max-width: 720px; }
+
+    /* ── SETTINGS PANELS ── */
+    .settings-panel { flex-direction: column; }
+    .settings-inner { padding: 2.5rem 3rem; max-width: 800px; display: flex; flex-direction: column; gap: 2rem; }
+    .settings-section { border: 1px solid var(--dim); }
+    .settings-section-header { background: var(--bg2); padding: 1rem 1.5rem; border-bottom: 1px solid var(--dim); display: flex; align-items: center; gap: 0.75rem; }
+    .settings-section-title { font-family: var(--font-d); font-size: 1.2rem; letter-spacing: 0.03em; color: var(--white); }
+    .settings-section-desc { font-size: 0.55rem; letter-spacing: 0.12em; color: var(--dim); }
+    .settings-section-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; background: var(--bg); }
+    .settings-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    /* ── FIELDS ── */
+    .field { display: flex; flex-direction: column; gap: 0.4rem; }
+    .field-label { font-size: 0.52rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gray); }
+    .field-hint { font-size: 0.5rem; letter-spacing: 0.1em; color: var(--dim); margin-top: 0.1rem; }
+    .fi {
+      background: var(--bg2); border: 1px solid var(--dim); outline: none; border-radius: 0;
+      padding: 0.75rem 0.9rem; font-family: var(--font-m); font-size: 0.72rem;
+      color: var(--white); letter-spacing: 0.05em; width: 100%; transition: border-color 0.2s;
     }
-    .login-box {
-      border: 1px solid var(--dim); background: var(--bg2); padding: 3rem;
-      display: flex; flex-direction: column; gap: 1.5rem; width: 360px;
-    }
-    .login-box h1 { font-family: var(--font-d); font-size: 2.5rem; color: var(--white); letter-spacing: 0.02em; }
-    .login-box p { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray); }
-    .login-box input {
-      background: var(--bg3); border: 1px solid var(--dim); border-radius: 0;
-      outline: none; padding: 0.85rem 1rem; font-family: var(--font-m); font-size: 0.75rem;
-      color: var(--white); letter-spacing: 0.1em; width: 100%;
-      transition: border-color 0.2s;
-    }
-    .login-box input:focus { border-color: var(--green); }
-    .login-box input::placeholder { color: #444; }
-    .btn-green {
-      background: var(--green); border: none; padding: 0.85rem 1.5rem;
-      font-family: var(--font-m); font-size: 0.62rem; letter-spacing: 0.22em;
-      text-transform: uppercase; color: var(--bg); cursor: pointer;
-      transition: background 0.2s; width: 100%;
-    }
+    .fi:focus { border-color: var(--green); }
+    .fi::placeholder { color: #333; }
+    textarea.fi { resize: vertical; min-height: 140px; line-height: 1.7; }
+    textarea.fi.tall { min-height: 300px; font-family: var(--font-b); font-size: 0.9rem; }
+    select.fi { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.9rem center; }
+
+    /* ── BUTTONS ── */
+    .btn-green { background: var(--green); border: none; padding: 0.7rem 1.5rem; font-family: var(--font-m); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--bg); cursor: pointer; transition: background 0.2s; white-space: nowrap; }
     .btn-green:hover { background: var(--green2); }
-    .login-err { color: var(--red); font-size: 0.58rem; letter-spacing: 0.15em; display: none; }
+    .btn-ghost { background: transparent; border: 1px solid var(--dim); padding: 0.7rem 1.5rem; font-family: var(--font-m); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray); cursor: pointer; transition: border-color 0.2s, color 0.2s; white-space: nowrap; }
+    .btn-ghost:hover { border-color: var(--green); color: var(--green); }
+    .btn-ghost.danger:hover { border-color: var(--red); color: var(--red); }
+    .btn-row { display: flex; gap: 0.75rem; align-items: center; padding-top: 0.5rem; border-top: 1px solid var(--dim); flex-wrap: wrap; }
 
-    /* ADMIN LAYOUT */
-    #admin { display: none; min-height: 100vh; }
-    .admin-nav {
-      background: var(--bg2); border-bottom: 1px solid var(--dim);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 2.5rem; height: 60px; position: sticky; top: 0; z-index: 100;
-    }
-    .admin-nav-logo { font-family: var(--font-d); font-size: 1.4rem; color: var(--green); letter-spacing: 0.05em; }
-    .admin-nav-right { display: flex; gap: 1rem; align-items: center; }
-    .btn-sm {
-      font-family: var(--font-m); font-size: 0.58rem; letter-spacing: 0.18em;
-      text-transform: uppercase; cursor: pointer; padding: 0.45rem 1rem;
-      border: 1px solid var(--dim); background: transparent; color: var(--gray);
-      transition: border-color 0.2s, color 0.2s;
-    }
-    .btn-sm:hover { border-color: var(--green); color: var(--green); }
-    .btn-sm.active { border-color: var(--green); color: var(--green); background: var(--green-dim); }
-    .btn-sm.danger { border-color: var(--red); color: var(--red); }
-    .btn-sm.danger:hover { background: rgba(224,60,60,0.1); }
+    /* ── STATUS BAR ── */
+    .statusbar { background: var(--bg2); border-top: 1px solid var(--dim); padding: 0.5rem 1.5rem; font-size: 0.52rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); display: flex; justify-content: space-between; flex-shrink: 0; }
+    .status-ok { color: var(--green); }
 
-    .admin-body { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 60px); }
+    /* ── PREVIEW MODAL ── */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.88); display: none; align-items: center; justify-content: center; z-index: 800; }
+    .modal.open { display: flex; }
+    .modal-box { background: var(--bg2); border: 1px solid var(--dim); width: 680px; max-width: 95vw; max-height: 85vh; overflow-y: auto; padding: 3rem; position: relative; }
+    .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-family: var(--font-m); font-size: 0.58rem; letter-spacing: 0.15em; color: var(--gray); cursor: pointer; }
+    .modal-close:hover { color: var(--green); }
+    .modal-cat { font-family: var(--font-m); font-size: 0.53rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--green); margin-bottom: 0.6rem; }
+    .modal-title { font-family: var(--font-d); font-size: 2.8rem; letter-spacing: 0.02em; color: var(--white); line-height: 1; margin-bottom: 0.75rem; }
+    .modal-meta { font-family: var(--font-m); font-size: 0.53rem; letter-spacing: 0.12em; color: var(--dim); padding-bottom: 1.25rem; border-bottom: 1px solid var(--dim); margin-bottom: 1.5rem; }
+    .modal-body { font-family: var(--font-b); font-style: italic; color: var(--gray); line-height: 1.9; white-space: pre-wrap; font-size: 1rem; }
 
-    /* SIDEBAR */
-    .sidebar { background: var(--bg2); border-right: 1px solid var(--dim); display: flex; flex-direction: column; }
-    .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--dim); display: flex; justify-content: space-between; align-items: center; }
-    .sidebar-header span { font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray); }
-    .btn-new {
-      background: var(--green); border: none; padding: 0.45rem 0.9rem;
-      font-family: var(--font-m); font-size: 0.58rem; letter-spacing: 0.18em;
-      text-transform: uppercase; color: var(--bg); cursor: pointer; transition: background 0.2s;
-    }
-    .btn-new:hover { background: var(--green2); }
+    /* ── CONFIRM ── */
+    .confirm { position: fixed; inset: 0; background: rgba(0,0,0,0.88); display: none; align-items: center; justify-content: center; z-index: 900; }
+    .confirm.open { display: flex; }
+    .confirm-box { background: var(--bg2); border: 1px solid var(--red); padding: 2.5rem; width: 360px; }
+    .confirm-box h3 { font-family: var(--font-d); font-size: 1.8rem; color: var(--white); margin-bottom: 0.6rem; }
+    .confirm-box p { font-size: 0.6rem; letter-spacing: 0.1em; color: var(--gray); margin-bottom: 1.75rem; line-height: 1.7; }
 
-    .article-list { flex: 1; overflow-y: auto; }
-    .article-item {
-      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--dim);
-      cursor: pointer; transition: background 0.2s; position: relative;
-    }
-    .article-item:hover { background: var(--bg3); }
-    .article-item.selected { background: var(--green-dim); border-left: 2px solid var(--green); }
-    .article-item-title { font-family: var(--font-d); font-size: 1rem; letter-spacing: 0.02em; color: var(--white); margin-bottom: 0.3rem; line-height: 1.1; }
-    .article-item-meta { font-size: 0.52rem; letter-spacing: 0.15em; color: var(--dim); display: flex; gap: 0.75rem; }
-    .article-item-cat { color: var(--green); }
-    .article-item-del {
-      position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
-      font-size: 0.7rem; color: var(--dim); cursor: pointer; padding: 0.3rem;
-      transition: color 0.2s; background: none; border: none;
-    }
-    .article-item-del:hover { color: var(--red); }
-    .empty-state { padding: 3rem 1.5rem; text-align: center; color: var(--dim); font-size: 0.62rem; letter-spacing: 0.15em; line-height: 1.8; }
+    /* ── PASSWORD PANEL ── */
+    .pw-section { max-width: 400px; }
 
-    /* EDITOR */
-    .editor { padding: 2.5rem 3rem; display: flex; flex-direction: column; gap: 1.5rem; max-width: 800px; }
-    .editor-placeholder { flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; color: var(--dim); padding: 3rem; }
-    .editor-placeholder h2 { font-family: var(--font-d); font-size: 3rem; color: #1e1e1e; letter-spacing: 0.02em; }
-    .editor-placeholder p { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; }
-
-    .field-group { display: flex; flex-direction: column; gap: 0.5rem; }
-    .field-label { font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gray); }
-    .field-input {
-      background: var(--bg2); border: 1px solid var(--dim); outline: none;
-      padding: 0.85rem 1rem; font-family: var(--font-m); font-size: 0.78rem;
-      color: var(--white); letter-spacing: 0.05em; width: 100%;
-      transition: border-color 0.2s; border-radius: 0;
-    }
-    .field-input:focus { border-color: var(--green); }
-    .field-input::placeholder { color: #3a3a3a; }
-    textarea.field-input { resize: vertical; min-height: 320px; line-height: 1.7; font-family: var(--font-b); font-size: 0.9rem; }
-
-    .fields-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .editor-actions { display: flex; gap: 1rem; padding-top: 0.5rem; border-top: 1px solid var(--dim); }
-
-    .status-bar {
-      background: var(--bg2); border-top: 1px solid var(--dim);
-      padding: 0.6rem 2.5rem; font-size: 0.55rem; letter-spacing: 0.2em;
-      text-transform: uppercase; color: var(--dim); display: flex; justify-content: space-between;
-    }
-    .status-saved { color: var(--green); }
-
-    /* PREVIEW MODAL */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-      display: none; align-items: center; justify-content: center; z-index: 500;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal-box {
-      background: var(--bg2); border: 1px solid var(--dim);
-      width: 680px; max-width: 95vw; max-height: 85vh; overflow-y: auto;
-      padding: 3rem;
-    }
-    .modal-cat { font-family: var(--font-m); font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--green); margin-bottom: 0.75rem; }
-    .modal-title { font-family: var(--font-d); font-size: 3rem; letter-spacing: 0.02em; color: var(--white); line-height: 1; margin-bottom: 1rem; }
-    .modal-meta { font-family: var(--font-m); font-size: 0.55rem; letter-spacing: 0.15em; color: var(--dim); margin-bottom: 2rem; border-bottom: 1px solid var(--dim); padding-bottom: 1rem; }
-    .modal-body { font-family: var(--font-b); font-style: italic; color: var(--gray); line-height: 1.85; font-size: 1rem; white-space: pre-wrap; }
-    .modal-close-btn {
-      display: block; margin: 2rem 0 0; background: none; border: 1px solid var(--dim);
-      font-family: var(--font-m); font-size: 0.6rem; letter-spacing: 0.2em;
-      text-transform: uppercase; color: var(--gray); cursor: pointer; padding: 0.7rem 1.5rem;
-      transition: border-color 0.2s, color 0.2s;
-    }
-    .modal-close-btn:hover { border-color: var(--green); color: var(--green); }
-
-    /* confirm */
-    .confirm-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-      display: none; align-items: center; justify-content: center; z-index: 600;
-    }
-    .confirm-overlay.open { display: flex; }
-    .confirm-box { background: var(--bg2); border: 1px solid var(--red); padding: 2.5rem; width: 380px; }
-    .confirm-box h3 { font-family: var(--font-d); font-size: 1.8rem; color: var(--white); margin-bottom: 0.75rem; }
-    .confirm-box p { font-size: 0.62rem; letter-spacing: 0.12em; color: var(--gray); margin-bottom: 2rem; line-height: 1.7; }
-    .confirm-btns { display: flex; gap: 1rem; }
-
-    select.field-input { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; }
+    /* ── TICKER ITEMS ── */
+    .ticker-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+    .ticker-tag { display: flex; align-items: center; gap: 0.4rem; background: var(--bg3); border: 1px solid var(--dim); padding: 0.3rem 0.7rem; font-size: 0.55rem; letter-spacing: 0.12em; color: var(--gray); }
+    .ticker-tag-del { background: none; border: none; color: var(--dim); cursor: pointer; font-size: 0.65rem; line-height: 1; padding: 0; transition: color 0.15s; }
+    .ticker-tag-del:hover { color: var(--red); }
+    .ticker-add-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .ticker-add-row .fi { flex: 1; }
   </style>
 </head>
 <body>
@@ -168,292 +146,651 @@
 <div id="login-screen">
   <div class="login-box">
     <div>
-      <h1>ADMIN</h1>
-      <p>Cassetta Maroc · Content Manager</p>
+      <div class="login-logo">⚙ CASSETTA ADMIN</div>
+      <div class="login-sub">Content Management System</div>
     </div>
-    <div class="field-group">
+    <div class="field">
       <label class="field-label">Password</label>
-      <input type="password" id="pw-input" class="field-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()" />
+      <input type="password" id="pw-input" class="fi" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()" />
     </div>
-    <p class="login-err" id="login-err">Incorrect password. Try again.</p>
+    <p class="login-err" id="login-err">Incorrect password.</p>
     <button class="btn-green" onclick="doLogin()">Enter Admin</button>
-    <p style="font-size:0.52rem;letter-spacing:0.15em;color:var(--dim);text-align:center">Default password: <span style="color:var(--green)">cassetta2025</span></p>
+    <p class="hint">Default: <span>cassetta2025</span></p>
   </div>
 </div>
 
 <!-- ADMIN -->
 <div id="admin">
-  <nav class="admin-nav">
-    <div class="admin-nav-logo">⚙ CASSETTA ADMIN</div>
-    <div class="admin-nav-right">
-      <a href="index.html" target="_blank" style="text-decoration:none">
-        <button class="btn-sm">View Site ↗</button>
-      </a>
-      <button class="btn-sm danger" onclick="doLogout()">Logout</button>
-    </div>
-  </nav>
-
-  <div class="admin-body">
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-      <div class="sidebar-header">
-        <span id="article-count">0 Articles</span>
-        <button class="btn-new" onclick="newArticle()">+ New</button>
-      </div>
-      <div class="article-list" id="article-list"></div>
-    </div>
-
-    <!-- EDITOR -->
-    <div id="editor-area" style="flex:1; display:flex; flex-direction:column;">
-      <div class="editor-placeholder" id="editor-placeholder">
-        <h2>SELECT OR CREATE</h2>
-        <p>Pick an article from the left, or create a new one</p>
-      </div>
-
-      <div class="editor" id="editor-form" style="display:none;">
-        <div class="field-group">
-          <label class="field-label">Article Title</label>
-          <input type="text" id="f-title" class="field-input" placeholder="e.g. Jil Jilala & The Sound of Moroccan Soul" oninput="markDirty()" />
-        </div>
-        <div class="fields-row">
-          <div class="field-group">
-            <label class="field-label">Category</label>
-            <select id="f-cat" class="field-input" onchange="markDirty()">
-              <option value="Artists">Artists</option>
-              <option value="Culture">Culture</option>
-              <option value="Regional">Regional</option>
-              <option value="Review">Review</option>
-              <option value="Archive">Archive</option>
-              <option value="History">History</option>
-            </select>
-          </div>
-          <div class="field-group">
-            <label class="field-label">Date</label>
-            <input type="text" id="f-date" class="field-input" placeholder="e.g. April 2025" oninput="markDirty()" />
-          </div>
-        </div>
-        <div class="field-group">
-          <label class="field-label">Short Description (shown on homepage)</label>
-          <input type="text" id="f-desc" class="field-input" placeholder="One or two sentences about the article..." oninput="markDirty()" />
-        </div>
-        <div class="field-group">
-          <label class="field-label">Full Article Content</label>
-          <textarea id="f-body" class="field-input" placeholder="Write your full article here..." oninput="markDirty()"></textarea>
-        </div>
-        <div class="editor-actions">
-          <button class="btn-green" onclick="saveArticle()">Save Article</button>
-          <button class="btn-sm active" onclick="previewArticle()">Preview</button>
-          <button class="btn-sm danger" onclick="confirmDelete()">Delete</button>
-        </div>
-      </div>
-
-      <div class="status-bar">
-        <span id="status-msg">Ready</span>
-        <span id="status-count"></span>
-      </div>
+  <div class="topbar">
+    <div class="topbar-logo">⚙ CASSETTA ADMIN</div>
+    <div class="topbar-right">
+      <a href="index.html" target="_blank" style="text-decoration:none"><button class="btn-ghost">View Site ↗</button></a>
+      <button class="btn-ghost" onclick="doLogout()">Logout</button>
     </div>
   </div>
-</div>
 
-<!-- PREVIEW MODAL -->
-<div class="modal-overlay" id="preview-modal" onclick="if(event.target===this)closePreview()">
+  <div class="main-layout">
+    <!-- SIDEBAR -->
+    <div class="sidenav">
+      <div class="sidenav-section">Content</div>
+      <div class="sidenav-item active" onclick="switchTab('articles')" id="tab-articles"><span class="icon">✍</span> Articles</div>
+      <div class="sidenav-divider"></div>
+      <div class="sidenav-section">Site Settings</div>
+      <div class="sidenav-item" onclick="switchTab('hero')" id="tab-hero"><span class="icon">🏠</span> Hero Section</div>
+      <div class="sidenav-item" onclick="switchTab('ticker')" id="tab-ticker"><span class="icon">📻</span> Ticker Bar</div>
+      <div class="sidenav-item" onclick="switchTab('categories')" id="tab-categories"><span class="icon">🗂</span> Categories</div>
+      <div class="sidenav-item" onclick="switchTab('about')" id="tab-about"><span class="icon">👤</span> About Section</div>
+      <div class="sidenav-item" onclick="switchTab('subscribe')" id="tab-subscribe"><span class="icon">✉</span> Subscribe Bar</div>
+      <div class="sidenav-item" onclick="switchTab('footer')" id="tab-footer"><span class="icon">🔗</span> Footer & Links</div>
+      <div class="sidenav-divider"></div>
+      <div class="sidenav-section">Admin</div>
+      <div class="sidenav-item" onclick="switchTab('password')" id="tab-password"><span class="icon">🔒</span> Change Password</div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content-area">
+
+      <!-- ── ARTICLES ── -->
+      <div class="panel articles-panel active" id="panel-articles">
+        <div class="articles-list-col">
+          <div class="col-header">
+            <span class="col-header-label" id="art-count">0 Articles</span>
+            <button class="btn-green" onclick="newArticle()">+ New</button>
+          </div>
+          <div class="art-list" id="art-list"></div>
+        </div>
+        <div class="art-editor-col" id="art-editor-col">
+          <div class="art-placeholder" id="art-placeholder">
+            <h2>SELECT OR CREATE</h2>
+            <p>Choose an article or hit "+ New"</p>
+          </div>
+          <div class="editor-inner" id="art-editor" style="display:none;">
+            <div class="field">
+              <label class="field-label">Article Title</label>
+              <input type="text" id="f-title" class="fi" placeholder="e.g. Jil Jilala & The Sound of Soul" oninput="dirty=true" />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+              <div class="field">
+                <label class="field-label">Category</label>
+                <select id="f-cat" class="fi" onchange="dirty=true">
+                  <option>Artists</option><option>Culture</option><option>Regional</option>
+                  <option>Review</option><option>Archive</option><option>History</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">Date</label>
+                <input type="text" id="f-date" class="fi" placeholder="e.g. April 2025" oninput="dirty=true" />
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">Short Description <span style="color:var(--dim)">(shown on homepage cards)</span></label>
+              <input type="text" id="f-desc" class="fi" placeholder="One or two sentences..." oninput="dirty=true" />
+            </div>
+            <div class="field">
+              <label class="field-label">Full Article Content</label>
+              <textarea id="f-body" class="fi tall" placeholder="Write your full article here..." oninput="dirty=true"></textarea>
+            </div>
+            <div class="btn-row">
+              <button class="btn-green" onclick="saveArticle()">Save</button>
+              <button class="btn-ghost" onclick="previewArticle()">Preview</button>
+              <button class="btn-ghost danger" onclick="confirmDel()">Delete</button>
+              <span id="art-status" style="font-size:0.52rem;letter-spacing:0.15em;color:var(--dim);margin-left:auto;"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── HERO ── -->
+      <div class="panel settings-panel" id="panel-hero">
+        <div class="settings-inner">
+          <h2 style="font-family:var(--font-d);font-size:2rem;letter-spacing:0.02em;color:var(--white);">HERO SECTION</h2>
+          <div class="settings-section">
+            <div class="settings-section-header">
+              <div><div class="settings-section-title">Headline & Tagline</div><div class="settings-section-desc">The big text visitors see first</div></div>
+            </div>
+            <div class="settings-section-body">
+              <div class="field">
+                <label class="field-label">Tag Line (small text above headline)</label>
+                <input id="h-tag" class="fi" placeholder="e.g. Moroccan Tapes · Est. Agadir" />
+              </div>
+              <div class="settings-row">
+                <div class="field">
+                  <label class="field-label">Headline Line 1</label>
+                  <input id="h-line1" class="fi" placeholder="e.g. THE" />
+                </div>
+                <div class="field">
+                  <label class="field-label">Headline Line 2 (green accent)</label>
+                  <input id="h-line2" class="fi" placeholder="e.g. SOUND" />
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label">Headline Line 3</label>
+                <input id="h-line3" class="fi" placeholder="e.g. OF MAROC" />
+              </div>
+              <div class="field">
+                <label class="field-label">Subtitle / Description</label>
+                <textarea id="h-sub" class="fi" rows="3" placeholder="A short italic description..."></textarea>
+              </div>
+              <div class="settings-row">
+                <div class="field">
+                  <label class="field-label">Button 1 Text</label>
+                  <input id="h-btn1" class="fi" placeholder="e.g. Explore Articles" />
+                </div>
+                <div class="field">
+                  <label class="field-label">Button 2 Text</label>
+                  <input id="h-btn2" class="fi" placeholder="e.g. Browse Genres" />
+                </div>
+              </div>
+              <div class="btn-row">
+                <button class="btn-green" onclick="saveSection('hero')">Save Hero</button>
+                <span id="hero-status" class="status-ok" style="font-size:0.52rem;letter-spacing:0.15em;display:none;">✓ Saved</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TICKER ── -->
+      <div class="panel settings-panel" id="panel-ticker">
+        <div class="settings-inner">
+          <h2 style="font-family:var(--font-d);font-size:2rem;letter-spacing:0.02em;color:var(--white);">TICKER BAR</h2>
+          <div class="settings-section">
+            <div class="settings-section-header">
+              <div><div class="settings-section-title">Scrolling Genre Tags</div><div class="settings-section-desc">The green strip that scrolls genre names</div></div>
+            </div>
+            <div class="settings-section-body">
+              <div class="field">
+                <label class="field-label">Current Tags</label>
+                <div class="ticker-tags" id="ticker-tags-list"></div>
+              </div>
+              <div class="field">
+                <label class="field-label">Add New Tag</label>
+                <div class="ticker-add-row">
+                  <input id="ticker-new-tag" class="fi" placeholder="e.g. Gnawa" onkeydown="if(event.key==='Enter')addTickerTag()" />
+                  <button class="btn-green" onclick="addTickerTag()">Add</button>
+                </div>
+              </div>
+              <div class="btn-row">
+                <button class="btn-green" onclick="saveSection('ticker')">Save Ticker</button>
+                <span id="ticker-status" class="status-ok" style="font-size:0.52rem;letter-spacing:0.15em;display:none;">✓ Saved</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CATEGORIES ── -->
+      <div class="panel settings-panel" id="panel-categories">
+        <div class="settings-inner">
+          <h2 style="font-family:var(--font-d);font-size:2rem;letter-spacing:0.02em;color:var(--white);">CATEGORIES</h2>
+          <div class="settings-section">
+            <div class="settings-section-header">
+              <div><div class="settings-section-title">Explore Section</div><div class="settings-section-desc">The 4 category boxes below the articles</div></div>
+            </div>
+            <div class="settings-section-body" id="cats-body">
+              <!-- rendered by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ABOUT ── -->
+      <div class="panel settings-panel" id="panel-about">
+        <div class="settings-inner">
+          <h2 style="font-family:var(--font-d);font-size:2rem;letter-spacing:0.02em;color:var(--white);">ABOUT SECTION</h2>
+          <div class="settings-section">
+            <div class="settings-section-header">
+              <div><div class="settings-section-title">Who We Are</div><div class="settings-section-desc">The about section at the bottom of the page</div></div>
+            </div>
+            <div class="settings-section-body">
+              <div class="field">
+                <label class="field-label">Section Headline</label>
+                <input id="ab-title" class="fi" placeholder="e.g. PRESERVING THE MAGNETIC MEMORY OF A CULTURE" />
+              </div>
+              <div class="field">
+                <label class="field-label">Paragraph 1</label>
+                <textarea id="ab-p1" class="fi" rows="4"></textarea>
+              </div>
+              <div class="field">
+                <label class="field-label">Paragraph 2</label>
+                <textarea id="ab-p2" class="fi" rows="4"></textarea>
+              </div>
+              <div class="settings-row">
+                <div class="field">
+                  <label class="field-label">Stat 1 — Number</label>
+                  <input id="ab-s1n" class="fi" placeholder="e.g. 40+" />
+                </div>
+                <div class="field">
+                  <label class="field-label">Stat 1 — Label</label>
+                  <input id="ab-s1l" class="fi" placeholder="e.g. Articles" />
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="field">
+                  <label class="field-label">Stat 2 — Number</label>
+                  <input id="ab-s2n" class="fi" placeholder="e.g. 12" />
+                </div>
+                <div class="field">
+                  <label class="field-label">Stat 2 — Label</label>
+                  <input id="ab-s2l" class="fi" placeholder="e.g. Genres" />
+                </div>
+              </div>
+              <div class="settings-row">
+                <div class="field">
+                  <label class="field-label">Stat 3 — Number</label>
+                  <input id="ab-s3n" class="fi" placeholder="e.g. 80s" />
+                </div>
+                <div class="field">
+                  <label class="field-label">Stat 3 — Label</label>
+                  <input id="ab-s3l" class="fi" placeholder="e.g. Era Focus" />
+                </div>
+              </div>
+              <div class="btn-row">
+                <button class="btn-green" onclick="saveSection('about')">Save About</button>
+                <span id="about-status" class="status-ok" style="font-size:0.52rem;letter-spacing:0.15em;display:none;">✓ Saved</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SUBSCRIBE ── -->
+      <div class="panel settings-panel" id="panel-subscribe">
+        <div class="settings-inner">
+          <h2 style="font-family:var(--font-d);font-size:2rem;letter-spacing:0.02em;color:var(--white);">SUBSCRIBE BAR</h2>
+          <div class="settings-section">
+            <div class="settings-section-header">
+              <div><div class="settings-section-title">Newsletter Section</div><div class="settings-section-desc">The green email signup strip</div></div>
+            </div>
+            <div class="settings-section-body">
+              <div class="settings-row">
+                <div class="field">
+                  <label class="field-label">Headline Line 1</label>
+                  <input id="sub-h1" class="fi" placeholder="e.g. STAY ON" />
+                </div>
+                <div class="field">
+                  <label class="field-label">Headline Line 2</label>
+                  <input id="sub-h2" class="fi" placeholder="e.g. THE TAPE" />
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label">Subtitle</label>
+                <input id="sub-desc" class="fi" placeholder="e.g. New articles and rare finds, in your inbox." />
+              </div>
+              <div class="field">
+                <label class="field-label">Button Label</label>
+                <input id="sub-btn" class="fi" placeholder="e.g. Subscribe" />
+              </div>
+              <div class="btn-row">
+                <button class="btn-green" onclick="saveSection('subscribe')">Save</button>
+                <span id="subscribe-status" class="status-ok" style="font-size:0.52rem;letter-spacing:0.15em;display:none;">✓ Saved</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FOOTER ── -->
+      <div class="panel settings-panel" id="panel-footer">
+        <div class="settings-inner">
+          <h2 style="font-family:var(--font-d);font-size:2rem;letter-spacing:0.02em;color:var(--white);">FOOTER & LINKS</h2>
+          <div class="settings-section">
+            <div class="settings-section-header">
+              <div><div class="settings-section-title">Social & Navigation Links</div></div>
+            </div>
+            <div class="settings-section-body">
+              <div class="field">
+                <label class="field-label">Copyright Text</label>
+                <input id="ft-copy" class="fi" placeholder="e.g. © 2025 Cassetta Maroc · All rights reserved" />
+              </div>
+              <div class="field">
+                <label class="field-label">Instagram URL</label>
+                <input id="ft-ig" class="fi" placeholder="https://www.instagram.com/cassetta.maroc/" />
+              </div>
+              <div class="settings-row">
+                <div class="field">
+                  <label class="field-label">Link 2 Label</label>
+                  <input id="ft-l2-label" class="fi" placeholder="e.g. Contact" />
+                </div>
+                <div class="field">
+                  <label class="field-label">Link 2 URL</label>
+                  <input id="ft-l2-url" class="fi" placeholder="e.g. mailto:hello@cassetta.ma" />
+                </div>
+              </div>
+              <div class="btn-row">
+                <button class="btn-green" onclick="saveSection('footer')">Save Footer</button>
+                <span id="footer-status" class="status-ok" style="font-size:0.52rem;letter-spacing:0.15em;display:none;">✓ Saved</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PASSWORD ── -->
+      <div class="panel settings-panel" id="panel-password">
+        <div class="settings-inner pw-section">
+          <h2 style="font-family:var(--font-d);font-size:2rem;letter-spacing:0.02em;color:var(--white);">CHANGE PASSWORD</h2>
+          <div class="settings-section">
+            <div class="settings-section-header">
+              <div><div class="settings-section-title">Admin Password</div><div class="settings-section-desc">Used to access this admin panel</div></div>
+            </div>
+            <div class="settings-section-body">
+              <div class="field">
+                <label class="field-label">Current Password</label>
+                <input type="password" id="pw-cur" class="fi" placeholder="Current password" />
+              </div>
+              <div class="field">
+                <label class="field-label">New Password</label>
+                <input type="password" id="pw-new" class="fi" placeholder="New password" />
+              </div>
+              <div class="field">
+                <label class="field-label">Confirm New Password</label>
+                <input type="password" id="pw-conf" class="fi" placeholder="Repeat new password" />
+              </div>
+              <p id="pw-msg" style="font-size:0.57rem;letter-spacing:0.12em;color:var(--dim);display:none;"></p>
+              <div class="btn-row">
+                <button class="btn-green" onclick="changePassword()">Update Password</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content-area -->
+  </div><!-- /main-layout -->
+
+  <div class="statusbar">
+    <span id="statusbar-msg">Ready</span>
+    <span id="statusbar-count"></span>
+  </div>
+</div><!-- /admin -->
+
+<!-- ARTICLE PREVIEW MODAL -->
+<div class="modal" id="preview-modal" onclick="if(event.target===this)closeModal('preview-modal')">
   <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('preview-modal')">✕ Close</button>
     <div class="modal-cat" id="prev-cat"></div>
     <div class="modal-title" id="prev-title"></div>
     <div class="modal-meta" id="prev-meta"></div>
     <div class="modal-body" id="prev-body"></div>
-    <button class="modal-close-btn" onclick="closePreview()">Close Preview</button>
   </div>
 </div>
 
-<!-- CONFIRM DELETE -->
-<div class="confirm-overlay" id="confirm-modal">
+<!-- DELETE CONFIRM -->
+<div class="confirm" id="confirm-del">
   <div class="confirm-box">
     <h3>DELETE ARTICLE?</h3>
-    <p>This will permanently remove the article. This action cannot be undone.</p>
-    <div class="confirm-btns">
+    <p>This will permanently remove the article. This cannot be undone.</p>
+    <div style="display:flex;gap:0.75rem;">
       <button class="btn-green" onclick="deleteArticle()" style="flex:1">Delete</button>
-      <button class="btn-sm" onclick="closeConfirm()" style="flex:1">Cancel</button>
+      <button class="btn-ghost" onclick="closeModal('confirm-del')" style="flex:1">Cancel</button>
     </div>
   </div>
 </div>
 
 <script>
-  const PASSWORD = 'cassetta2025';
-  let articles = [];
-  let currentId = null;
-  let dirty = false;
+// ── STATE ──
+let PASSWORD = localStorage.getItem('cm_password') || 'cassetta2025';
+let articles = [];
+let currentId = null;
+let dirty = false;
 
-  // ── AUTH ──
-  function doLogin() {
-    const pw = document.getElementById('pw-input').value;
-    if (pw === PASSWORD) {
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('admin').style.display = 'block';
-      loadArticles();
-    } else {
-      document.getElementById('login-err').style.display = 'block';
-    }
+// Default content
+const DEFAULTS = {
+  hero: { tag:'Moroccan Tapes · Est. Agadir', line1:'THE', line2:'SOUND', line3:'OF MAROC', sub:'A journal dedicated to the cassette tapes, artists, and stories that shaped Moroccan music culture.', btn1:'Explore Articles', btn2:'Browse Genres' },
+  ticker: { tags: ['Chaâbi','Gnawa','Jil Jilala','Rai Oranais','Amazigh','Andalous','Nass El Ghiwane','Desert Blues','Moroccan Jazz'] },
+  categories: [
+    { name:'Artists & Legends', desc:'Portraits of the voices that shaped a generation' },
+    { name:'Tape Reviews', desc:'Deep dives into iconic cassette releases' },
+    { name:'Regional Sounds', desc:'From the Atlas Mountains to the Atlantic' },
+    { name:'The Archive', desc:'Lost recordings, rediscovered stories' },
+  ],
+  about: { title:'PRESERVING THE MAGNETIC MEMORY OF A CULTURE', p1:'Cassetta Maroc is an independent journal dedicated to the rich, underexplored history of cassette music in Morocco. From the golden age of Chaâbi and Gnawa masters to the underground fusion scenes of the 90s, we believe these sounds deserve more than silence.', p2:'Each article is a love letter to the artists, the listeners, and the dusty tape players that kept the music alive through decades of change.', s1n:'40+', s1l:'Articles', s2n:'12', s2l:'Genres', s3n:'80s', s3l:'Era Focus' },
+  subscribe: { h1:'STAY ON', h2:'THE TAPE', desc:'New articles and rare finds, in your inbox.', btn:'Subscribe' },
+  footer: { copy:'© 2025 Cassetta Maroc · All rights reserved', ig:'https://www.instagram.com/cassetta.maroc/', l2label:'Contact', l2url:'#' },
+};
+
+function getSetting(key) {
+  try { return JSON.parse(localStorage.getItem('cm_' + key)) || DEFAULTS[key]; } catch(e) { return DEFAULTS[key]; }
+}
+function setSetting(key, val) { localStorage.setItem('cm_' + key, JSON.stringify(val)); }
+
+// ── AUTH ──
+function doLogin() {
+  PASSWORD = localStorage.getItem('cm_password') || 'cassetta2025';
+  if (document.getElementById('pw-input').value === PASSWORD) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin').style.display = 'flex';
+    init();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
   }
+}
+function doLogout() {
+  document.getElementById('admin').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('pw-input').value = '';
+}
 
-  function doLogout() {
-    document.getElementById('admin').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('pw-input').value = '';
+// ── INIT ──
+function init() {
+  try { articles = JSON.parse(localStorage.getItem('cassetta_articles') || '[]'); } catch(e) { articles = []; }
+  renderArticleList();
+  loadHeroFields();
+  loadTickerFields();
+  loadCatFields();
+  loadAboutFields();
+  loadSubscribeFields();
+  loadFooterFields();
+  status('Ready · ' + articles.length + ' article(s)');
+}
+
+// ── TABS ──
+function switchTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidenav-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ── ARTICLES ──
+function renderArticleList() {
+  const list = document.getElementById('art-list');
+  document.getElementById('art-count').textContent = articles.length + ' Article' + (articles.length !== 1 ? 's' : '');
+  document.getElementById('statusbar-count').textContent = articles.length + ' articles total';
+  if (!articles.length) {
+    list.innerHTML = '<div class="empty-list">No articles yet.<br>Click "+ New" to start.</div>';
+    return;
   }
+  list.innerHTML = articles.map(a => `
+    <div class="art-item ${currentId === a.id ? 'sel' : ''}" onclick="selectArticle('${a.id}')">
+      <div class="art-item-title">${a.title || 'Untitled'}</div>
+      <div class="art-item-meta"><span class="art-item-cat">${a.category || ''}</span><span>${a.date || ''}</span></div>
+      <button class="art-del-btn" onclick="event.stopPropagation();currentId='${a.id}';confirmDel()" title="Delete">✕</button>
+    </div>
+  `).join('');
+}
 
-  // ── STORAGE ──
-  function loadArticles() {
-    try {
-      articles = JSON.parse(localStorage.getItem('cassetta_articles') || '[]');
-    } catch(e) { articles = []; }
-    renderList();
-    setStatus('Loaded ' + articles.length + ' article(s)');
+function selectArticle(id) {
+  if (dirty && !confirm('Unsaved changes — discard?')) return;
+  currentId = id; dirty = false;
+  const a = articles.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('f-title').value = a.title || '';
+  document.getElementById('f-cat').value = a.category || 'Artists';
+  document.getElementById('f-date').value = a.date || '';
+  document.getElementById('f-desc').value = a.description || '';
+  document.getElementById('f-body').value = a.body || '';
+  showEditor(); renderArticleList();
+  status('Editing: ' + (a.title || 'Untitled'));
+}
+
+function newArticle() {
+  if (dirty && !confirm('Unsaved changes — discard?')) return;
+  const id = 'art_' + Date.now();
+  const today = new Date().toLocaleDateString('en-US', {month:'long',year:'numeric'});
+  articles.unshift({id, title:'', category:'Artists', date: today, description:'', body:''});
+  localStorage.setItem('cassetta_articles', JSON.stringify(articles));
+  currentId = id; dirty = false;
+  ['f-title','f-desc','f-body'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-cat').value = 'Artists';
+  document.getElementById('f-date').value = today;
+  showEditor(); renderArticleList();
+  document.getElementById('f-title').focus();
+  status('New article ready');
+}
+
+function showEditor() {
+  document.getElementById('art-placeholder').style.display = 'none';
+  document.getElementById('art-editor').style.display = 'flex';
+}
+
+function saveArticle() {
+  if (!currentId) return;
+  const idx = articles.findIndex(x => x.id === currentId);
+  if (idx === -1) return;
+  articles[idx] = {
+    id: currentId,
+    title: document.getElementById('f-title').value.trim(),
+    category: document.getElementById('f-cat').value,
+    date: document.getElementById('f-date').value.trim(),
+    description: document.getElementById('f-desc').value.trim(),
+    body: document.getElementById('f-body').value.trim(),
+  };
+  localStorage.setItem('cassetta_articles', JSON.stringify(articles));
+  dirty = false; renderArticleList();
+  const s = document.getElementById('art-status');
+  s.textContent = '✓ Saved'; s.style.color = 'var(--green)';
+  setTimeout(() => { s.textContent = ''; }, 2500);
+  status('Saved: ' + (articles[idx].title || 'Untitled'));
+}
+
+function confirmDel() { document.getElementById('confirm-del').classList.add('open'); }
+
+function deleteArticle() {
+  closeModal('confirm-del');
+  articles = articles.filter(x => x.id !== currentId);
+  localStorage.setItem('cassetta_articles', JSON.stringify(articles));
+  currentId = null; dirty = false;
+  document.getElementById('art-placeholder').style.display = 'flex';
+  document.getElementById('art-editor').style.display = 'none';
+  renderArticleList(); status('Article deleted');
+}
+
+function previewArticle() {
+  document.getElementById('prev-cat').textContent = document.getElementById('f-cat').value;
+  document.getElementById('prev-title').textContent = (document.getElementById('f-title').value || 'Untitled').toUpperCase();
+  document.getElementById('prev-meta').textContent = document.getElementById('f-date').value + ' · Cassetta Maroc';
+  document.getElementById('prev-body').textContent = document.getElementById('f-body').value || '(No content)';
+  document.getElementById('preview-modal').classList.add('open');
+}
+
+// ── SECTION SAVES ──
+function saveSection(name) {
+  let data = {};
+  if (name === 'hero') {
+    data = { tag: v('h-tag'), line1: v('h-line1'), line2: v('h-line2'), line3: v('h-line3'), sub: v('h-sub'), btn1: v('h-btn1'), btn2: v('h-btn2') };
+  } else if (name === 'ticker') {
+    data = { tags: currentTickerTags };
+  } else if (name === 'categories') {
+    data = [0,1,2,3].map(i => ({ name: v('cat-name-'+i), desc: v('cat-desc-'+i) }));
+  } else if (name === 'about') {
+    data = { title:v('ab-title'), p1:v('ab-p1'), p2:v('ab-p2'), s1n:v('ab-s1n'), s1l:v('ab-s1l'), s2n:v('ab-s2n'), s2l:v('ab-s2l'), s3n:v('ab-s3n'), s3l:v('ab-s3l') };
+  } else if (name === 'subscribe') {
+    data = { h1:v('sub-h1'), h2:v('sub-h2'), desc:v('sub-desc'), btn:v('sub-btn') };
+  } else if (name === 'footer') {
+    data = { copy:v('ft-copy'), ig:v('ft-ig'), l2label:v('ft-l2-label'), l2url:v('ft-l2-url') };
   }
+  setSetting(name, data);
+  const s = document.getElementById(name + '-status');
+  if (s) { s.style.display = 'inline'; setTimeout(() => { s.style.display = 'none'; }, 2500); }
+  status('Saved: ' + name + ' section');
+}
 
-  function saveToStorage() {
-    localStorage.setItem('cassetta_articles', JSON.stringify(articles));
-  }
+function v(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
 
-  // ── LIST ──
-  function renderList() {
-    const list = document.getElementById('article-list');
-    document.getElementById('article-count').textContent = articles.length + ' Article' + (articles.length !== 1 ? 's' : '');
-    document.getElementById('status-count').textContent = articles.length + ' total';
+// ── LOAD FIELDS ──
+function loadHeroFields() {
+  const d = getSetting('hero');
+  set('h-tag', d.tag); set('h-line1', d.line1); set('h-line2', d.line2);
+  set('h-line3', d.line3); set('h-sub', d.sub); set('h-btn1', d.btn1); set('h-btn2', d.btn2);
+}
 
-    if (articles.length === 0) {
-      list.innerHTML = '<div class="empty-state">No articles yet.<br>Click "+ New" to create your first one.</div>';
-      return;
-    }
+let currentTickerTags = [];
+function loadTickerFields() {
+  const d = getSetting('ticker');
+  currentTickerTags = [...(d.tags || DEFAULTS.ticker.tags)];
+  renderTickerTags();
+}
+function renderTickerTags() {
+  document.getElementById('ticker-tags-list').innerHTML = currentTickerTags.map((t, i) => `
+    <div class="ticker-tag">${t}<button class="ticker-tag-del" onclick="removeTickerTag(${i})">✕</button></div>
+  `).join('');
+}
+function addTickerTag() {
+  const inp = document.getElementById('ticker-new-tag');
+  const val = inp.value.trim();
+  if (val && !currentTickerTags.includes(val)) { currentTickerTags.push(val); renderTickerTags(); }
+  inp.value = '';
+}
+function removeTickerTag(i) { currentTickerTags.splice(i, 1); renderTickerTags(); }
 
-    list.innerHTML = articles.map((a, i) => `
-      <div class="article-item ${currentId === a.id ? 'selected' : ''}" onclick="selectArticle('${a.id}')">
-        <div class="article-item-title">${a.title || 'Untitled'}</div>
-        <div class="article-item-meta">
-          <span class="article-item-cat">${a.category || '—'}</span>
-          <span>${a.date || '—'}</span>
-        </div>
-        <button class="article-item-del" onclick="event.stopPropagation(); currentId='${a.id}'; confirmDelete()" title="Delete">✕</button>
-      </div>
-    `).join('');
-  }
+function loadCatFields() {
+  const d = getSetting('categories');
+  const body = document.getElementById('cats-body');
+  body.innerHTML = d.map((cat, i) => `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding-bottom:1rem;border-bottom:1px solid var(--dim);margin-bottom:1rem;">
+      <div class="field"><label class="field-label">Category ${i+1} — Name</label><input id="cat-name-${i}" class="fi" value="${cat.name}" /></div>
+      <div class="field"><label class="field-label">Category ${i+1} — Description</label><input id="cat-desc-${i}" class="fi" value="${cat.desc}" /></div>
+    </div>
+  `).join('') + `<div class="btn-row"><button class="btn-green" onclick="saveSection('categories')">Save Categories</button><span id="categories-status" class="status-ok" style="font-size:0.52rem;letter-spacing:0.15em;display:none;">✓ Saved</span></div>`;
+}
 
-  // ── SELECT / NEW ──
-  function selectArticle(id) {
-    if (dirty && !confirm('You have unsaved changes. Discard?')) return;
-    currentId = id;
-    dirty = false;
-    const a = articles.find(x => x.id === id);
-    if (!a) return;
-    document.getElementById('f-title').value = a.title || '';
-    document.getElementById('f-cat').value = a.category || 'Artists';
-    document.getElementById('f-date').value = a.date || '';
-    document.getElementById('f-desc').value = a.description || '';
-    document.getElementById('f-body').value = a.body || '';
-    showEditor();
-    renderList();
-    setStatus('Editing: ' + (a.title || 'Untitled'));
-  }
+function loadAboutFields() {
+  const d = getSetting('about');
+  set('ab-title', d.title); set('ab-p1', d.p1); set('ab-p2', d.p2);
+  set('ab-s1n', d.s1n); set('ab-s1l', d.s1l);
+  set('ab-s2n', d.s2n); set('ab-s2l', d.s2l);
+  set('ab-s3n', d.s3n); set('ab-s3l', d.s3l);
+}
 
-  function newArticle() {
-    if (dirty && !confirm('You have unsaved changes. Discard?')) return;
-    const id = 'art_' + Date.now();
-    const today = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    const a = { id, title: '', category: 'Artists', date: today, description: '', body: '' };
-    articles.unshift(a);
-    saveToStorage();
-    currentId = id;
-    dirty = false;
-    document.getElementById('f-title').value = '';
-    document.getElementById('f-cat').value = 'Artists';
-    document.getElementById('f-date').value = today;
-    document.getElementById('f-desc').value = '';
-    document.getElementById('f-body').value = '';
-    showEditor();
-    renderList();
-    document.getElementById('f-title').focus();
-    setStatus('New article created');
-  }
+function loadSubscribeFields() {
+  const d = getSetting('subscribe');
+  set('sub-h1', d.h1); set('sub-h2', d.h2); set('sub-desc', d.desc); set('sub-btn', d.btn);
+}
 
-  function showEditor() {
-    document.getElementById('editor-placeholder').style.display = 'none';
-    document.getElementById('editor-form').style.display = 'flex';
-  }
+function loadFooterFields() {
+  const d = getSetting('footer');
+  set('ft-copy', d.copy); set('ft-ig', d.ig); set('ft-l2-label', d.l2label); set('ft-l2-url', d.l2url);
+}
 
-  // ── SAVE ──
-  function saveArticle() {
-    if (!currentId) return;
-    const idx = articles.findIndex(x => x.id === currentId);
-    if (idx === -1) return;
-    articles[idx] = {
-      id: currentId,
-      title: document.getElementById('f-title').value.trim(),
-      category: document.getElementById('f-cat').value,
-      date: document.getElementById('f-date').value.trim(),
-      description: document.getElementById('f-desc').value.trim(),
-      body: document.getElementById('f-body').value.trim(),
-    };
-    saveToStorage();
-    dirty = false;
-    renderList();
-    setStatus('✓ Saved — "' + (articles[idx].title || 'Untitled') + '"', true);
-  }
+function set(id, val) { const el = document.getElementById(id); if (el && val !== undefined) el.value = val; }
 
-  // ── DELETE ──
-  function confirmDelete() {
-    document.getElementById('confirm-modal').classList.add('open');
-  }
+// ── PASSWORD ──
+function changePassword() {
+  const cur = document.getElementById('pw-cur').value;
+  const nw = document.getElementById('pw-new').value;
+  const conf = document.getElementById('pw-conf').value;
+  const msg = document.getElementById('pw-msg');
+  msg.style.display = 'block';
+  if (cur !== PASSWORD) { msg.textContent = '✕ Current password is incorrect.'; msg.style.color = 'var(--red)'; return; }
+  if (nw.length < 6) { msg.textContent = '✕ Password must be at least 6 characters.'; msg.style.color = 'var(--red)'; return; }
+  if (nw !== conf) { msg.textContent = '✕ Passwords do not match.'; msg.style.color = 'var(--red)'; return; }
+  PASSWORD = nw;
+  localStorage.setItem('cm_password', nw);
+  msg.textContent = '✓ Password updated successfully.'; msg.style.color = 'var(--green)';
+  ['pw-cur','pw-new','pw-conf'].forEach(id => document.getElementById(id).value = '');
+  status('Password changed');
+}
 
-  function closeConfirm() {
-    document.getElementById('confirm-modal').classList.remove('open');
-  }
+// ── UTILS ──
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function status(msg) { document.getElementById('statusbar-msg').textContent = msg; }
 
-  function deleteArticle() {
-    closeConfirm();
-    if (!currentId) return;
-    articles = articles.filter(x => x.id !== currentId);
-    saveToStorage();
-    currentId = null;
-    dirty = false;
-    document.getElementById('editor-placeholder').style.display = 'flex';
-    document.getElementById('editor-form').style.display = 'none';
-    renderList();
-    setStatus('Article deleted');
-  }
-
-  // ── PREVIEW ──
-  function previewArticle() {
-    const title = document.getElementById('f-title').value || 'Untitled';
-    const cat = document.getElementById('f-cat').value;
-    const date = document.getElementById('f-date').value;
-    const body = document.getElementById('f-body').value;
-    document.getElementById('prev-cat').textContent = cat;
-    document.getElementById('prev-title').textContent = title.toUpperCase();
-    document.getElementById('prev-meta').textContent = date + ' · Cassetta Maroc';
-    document.getElementById('prev-body').textContent = body || '(No content yet)';
-    document.getElementById('preview-modal').classList.add('open');
-  }
-
-  function closePreview() {
-    document.getElementById('preview-modal').classList.remove('open');
-  }
-
-  // ── DIRTY ──
-  function markDirty() { dirty = true; setStatus('Unsaved changes...'); }
-
-  // ── STATUS ──
-  function setStatus(msg, success) {
-    const el = document.getElementById('status-msg');
-    el.textContent = msg;
-    el.className = success ? 'status-saved' : '';
-    if (success) setTimeout(() => { el.textContent = 'Ready'; el.className = ''; }, 3000);
-  }
-
-  // ── KEYBOARD SAVE ──
-  document.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveArticle(); }
-    if (e.key === 'Escape') { closePreview(); closeConfirm(); }
-  });
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveArticle(); }
+  if (e.key === 'Escape') { closeModal('preview-modal'); closeModal('confirm-del'); }
+});
 </script>
 </body>
 </html>
