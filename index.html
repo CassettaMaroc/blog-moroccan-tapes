@@ -25,7 +25,7 @@
     .nav-links { display: flex; gap: 2rem; list-style: none; align-items: center; }
     .nav-links a { font-family: var(--font-m); font-size: 0.63rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray); text-decoration: none; transition: color 0.2s; }
     .nav-links a:hover { color: var(--green2); }
-    .nav-cta { color: var(--bg) !important; background: var(--green); padding: 0.45rem 1.1rem; transition: background 0.2s !important; }
+    .nav-cta { color: var(--bg) !important; background: var(--green) !important; padding: 0.45rem 1.1rem; transition: background 0.2s !important; }
     .nav-cta:hover { background: var(--green2) !important; }
 
     .hero { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding-top: 64px; border-bottom: 1px solid var(--dim); overflow: hidden; }
@@ -58,32 +58,7 @@
     .lbl::after { content: ''; flex: 1; max-width: 36px; height: 1px; background: var(--green); }
     .sec-title { font-family: var(--font-d); font-size: clamp(3rem, 5vw, 5.5rem); letter-spacing: 0.02em; line-height: 0.92; color: var(--white); margin-bottom: 2.5rem; }
 
-    .feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--dim); border: 1px solid var(--dim); }
-    .feat-main { background: var(--bg2); padding: 3rem; display: flex; flex-direction: column; gap: 1.5rem; }
-    .tape-art { width: 100%; height: 200px; background: var(--bg3); border: 1px solid var(--dim); display: flex; align-items: center; justify-content: center; }
-    .itag { font-family: var(--font-m); font-size: 0.53rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--green); background: var(--green-dim); border: 1px solid var(--green-border); padding: 0.3rem 0.75rem; display: inline-block; width: fit-content; }
-    .feat-main h3 { font-family: var(--font-d); font-size: 2.6rem; letter-spacing: 0.02em; line-height: 1; color: var(--white); }
-    .feat-main p { font-family: var(--font-b); font-style: italic; color: var(--gray); font-size: 0.93rem; line-height: 1.8; }
-    .rlink { font-family: var(--font-m); font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; width: fit-content; border-bottom: 1px solid var(--green-border); padding-bottom: 2px; transition: color 0.2s; }
-    .rlink:hover { color: var(--green2); }
-    .feat-aside { background: var(--bg2); display: flex; flex-direction: column; }
-    .sc { padding: 2rem 2.5rem; border-bottom: 1px solid var(--dim); flex: 1; transition: background 0.2s; cursor: pointer; }
-    .sc:last-child { border-bottom: none; }
-    .sc:hover { background: var(--bg3); }
-    .sc-n { font-family: var(--font-d); font-size: 3rem; color: var(--dim); line-height: 1; margin-bottom: 0.4rem; }
-    .sc h4 { font-family: var(--font-d); font-size: 1.45rem; letter-spacing: 0.02em; color: var(--white); margin-bottom: 0.4rem; }
-    .sc p { font-family: var(--font-b); font-style: italic; font-size: 0.85rem; color: var(--gray); }
-
-    .bg2s { background: var(--bg2); border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim); }
-    .cat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--dim); border: 1px solid var(--dim); }
-    .cat-box { background: var(--bg); padding: 2.5rem 2rem; cursor: pointer; transition: background 0.2s; position: relative; overflow: hidden; }
-    .cat-box::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--green); transform: scaleX(0); transition: transform 0.3s; transform-origin: left; }
-    .cat-box:hover { background: var(--bg2); }
-    .cat-box:hover::after { transform: scaleX(1); }
-    .cat-n { font-family: var(--font-m); font-size: 0.53rem; letter-spacing: 0.2em; color: var(--dim); margin-bottom: 0.7rem; }
-    .cat-name { font-family: var(--font-d); font-size: 1.6rem; letter-spacing: 0.02em; color: var(--white); margin-bottom: 0.4rem; }
-    .cat-desc { font-family: var(--font-b); font-style: italic; font-size: 0.83rem; color: var(--gray); }
-
+    /* DYNAMIC GRID */
     .blog-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--dim); border: 1px solid var(--dim); }
     .bc { background: var(--bg2); padding: 2.5rem 2rem; display: flex; flex-direction: column; gap: 0.75rem; transition: background 0.2s; cursor: pointer; }
     .bc:hover { background: var(--bg3); }
@@ -95,6 +70,33 @@
     .cfoot { display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--dim); }
     .cdate { font-family: var(--font-m); font-size: 0.53rem; letter-spacing: 0.15em; color: var(--dim); }
     .arr { font-size: 0.85rem; color: var(--dim); transition: color 0.2s; }
+
+    /* FEATURED */
+    .feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--dim); border: 1px solid var(--dim); }
+    .feat-main { background: var(--bg2); padding: 3rem; display: flex; flex-direction: column; gap: 1.5rem; }
+    .tape-art { width: 100%; height: 200px; background: var(--bg3); border: 1px solid var(--dim); display: flex; align-items: center; justify-content: center; }
+    .itag { font-family: var(--font-m); font-size: 0.53rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--green); background: var(--green-dim); border: 1px solid var(--green-border); padding: 0.3rem 0.75rem; display: inline-block; width: fit-content; }
+    .feat-main h3 { font-family: var(--font-d); font-size: 2.6rem; letter-spacing: 0.02em; line-height: 1; color: var(--white); cursor:pointer; }
+    .feat-main h3:hover { color: var(--green); }
+    .feat-main p { font-family: var(--font-b); font-style: italic; color: var(--gray); font-size: 0.93rem; line-height: 1.8; }
+    .rlink { font-family: var(--font-m); font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; width: fit-content; border-bottom: 1px solid var(--green-border); padding-bottom: 2px; cursor: pointer; transition: color 0.2s; }
+    .rlink:hover { color: var(--green2); }
+    .feat-aside { background: var(--bg2); display: flex; flex-direction: column; }
+    .sc { padding: 2rem 2.5rem; border-bottom: 1px solid var(--dim); flex: 1; transition: background 0.2s; cursor: pointer; }
+    .sc:last-child { border-bottom: none; }
+    .sc:hover { background: var(--bg3); }
+    .sc-n { font-family: var(--font-d); font-size: 3rem; color: var(--dim); line-height: 1; margin-bottom: 0.4rem; }
+    .sc h4 { font-family: var(--font-d); font-size: 1.45rem; letter-spacing: 0.02em; color: var(--white); margin-bottom: 0.4rem; }
+    .sc p { font-family: var(--font-b); font-style: italic; font-size: 0.85rem; color: var(--gray); }
+
+    .cat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--dim); border: 1px solid var(--dim); }
+    .cat-box { background: var(--bg); padding: 2.5rem 2rem; cursor: pointer; transition: background 0.2s; position: relative; overflow: hidden; }
+    .cat-box::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--green); transform: scaleX(0); transition: transform 0.3s; transform-origin: left; }
+    .cat-box:hover { background: var(--bg2); }
+    .cat-box:hover::after { transform: scaleX(1); }
+    .cat-n { font-family: var(--font-m); font-size: 0.53rem; letter-spacing: 0.2em; color: var(--dim); margin-bottom: 0.7rem; }
+    .cat-name { font-family: var(--font-d); font-size: 1.6rem; letter-spacing: 0.02em; color: var(--white); margin-bottom: 0.4rem; }
+    .cat-desc { font-family: var(--font-b); font-style: italic; font-size: 0.83rem; color: var(--gray); }
 
     .about-inner { display: grid; grid-template-columns: 1fr 1.6fr; gap: 5rem; align-items: center; }
     .alogo { background: var(--bg3); border: 1px solid var(--dim); display: flex; align-items: center; justify-content: center; padding: 4rem 3rem; position: relative; }
@@ -113,7 +115,7 @@
     .sub-txt h2 { font-family: var(--font-d); font-size: 3.5rem; letter-spacing: 0.02em; line-height: 1; color: var(--bg); }
     .sub-txt p { font-family: var(--font-b); font-style: italic; color: rgba(0,0,0,0.6); margin-top: 0.4rem; }
     .sub-form { display: flex; min-width: 400px; }
-    .sub-form input { flex: 1; background: rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.25); border-right: none; outline: none; padding: 1rem 1.25rem; font-family: var(--font-m); font-size: 0.68rem; letter-spacing: 0.1em; color: var(--bg); caret-color: var(--bg); }
+    .sub-form input { flex: 1; background: rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.25); border-right: none; outline: none; padding: 1rem 1.25rem; font-family: var(--font-m); font-size: 0.68rem; letter-spacing: 0.1em; color: var(--bg); }
     .sub-form input::placeholder { color: rgba(0,0,0,0.4); }
     .sub-form button { background: var(--bg); border: 1px solid var(--bg); padding: 1rem 1.5rem; font-family: var(--font-m); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); cursor: pointer; transition: background 0.2s; white-space: nowrap; }
     .sub-form button:hover { background: #111; }
@@ -124,6 +126,20 @@
     .flinks { display: flex; gap: 1.5rem; }
     .flinks a { font-family: var(--font-m); font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray); text-decoration: none; transition: color 0.2s; }
     .flinks a:hover { color: var(--green); }
+
+    /* ARTICLE READER MODAL */
+    .reader-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; align-items: flex-start; justify-content: center; z-index: 500; overflow-y: auto; padding: 3rem 2rem; }
+    .reader-overlay.open { display: flex; }
+    .reader-box { background: var(--bg2); border: 1px solid var(--dim); width: 720px; max-width: 100%; padding: 3.5rem; position: relative; margin: auto; }
+    .reader-close { position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; font-family: var(--font-m); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gray); cursor: pointer; transition: color 0.2s; }
+    .reader-close:hover { color: var(--green); }
+    .reader-cat { font-family: var(--font-m); font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--green); margin-bottom: 0.75rem; }
+    .reader-title { font-family: var(--font-d); font-size: 3.5rem; letter-spacing: 0.02em; color: var(--white); line-height: 1; margin-bottom: 1rem; }
+    .reader-meta { font-family: var(--font-m); font-size: 0.55rem; letter-spacing: 0.15em; color: var(--dim); margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--dim); }
+    .reader-body { font-family: var(--font-b); font-size: 1.05rem; color: var(--gray); line-height: 1.9; white-space: pre-wrap; }
+
+    .no-articles { grid-column: 1/-1; padding: 4rem; text-align: center; color: var(--dim); font-family: var(--font-m); font-size: 0.6rem; letter-spacing: 0.2em; }
+    .bg2s { background: var(--bg2); border-top: 1px solid var(--dim); border-bottom: 1px solid var(--dim); }
   </style>
 </head>
 <body>
@@ -151,7 +167,7 @@
   <div class="hero-right">
     <div class="hero-bg-txt">كاسيتا</div>
     <div class="cassette-wrap">
-      <svg width="320" height="210" viewBox="0 0 320 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="320" height="210" viewBox="0 0 320 210" fill="none">
         <rect x="3" y="3" width="314" height="204" rx="10" fill="#111" stroke="#2a2a2a" stroke-width="1.5"/>
         <rect x="82" y="18" width="156" height="96" rx="4" fill="#161616" stroke="#1e1e1e" stroke-width="1"/>
         <rect x="82" y="18" width="156" height="5" fill="#03a74e"/>
@@ -163,21 +179,13 @@
         <circle cx="82" cy="152" r="42" fill="#0d0d0d" stroke="#1e1e1e" stroke-width="1"/>
         <circle cx="82" cy="152" r="27" fill="#111" stroke="#252525" stroke-width="1"/>
         <circle cx="82" cy="152" r="7.5" fill="#03a74e"/>
-        <circle cx="82" cy="125" r="2.5" fill="#1e1e1e"/>
-        <circle cx="105" cy="139" r="2.5" fill="#1e1e1e"/>
-        <circle cx="105" cy="165" r="2.5" fill="#1e1e1e"/>
-        <circle cx="82" cy="179" r="2.5" fill="#1e1e1e"/>
-        <circle cx="59" cy="165" r="2.5" fill="#1e1e1e"/>
-        <circle cx="59" cy="139" r="2.5" fill="#1e1e1e"/>
+        <circle cx="82" cy="125" r="2.5" fill="#1e1e1e"/><circle cx="105" cy="139" r="2.5" fill="#1e1e1e"/><circle cx="105" cy="165" r="2.5" fill="#1e1e1e"/>
+        <circle cx="82" cy="179" r="2.5" fill="#1e1e1e"/><circle cx="59" cy="165" r="2.5" fill="#1e1e1e"/><circle cx="59" cy="139" r="2.5" fill="#1e1e1e"/>
         <circle cx="238" cy="152" r="42" fill="#0d0d0d" stroke="#1e1e1e" stroke-width="1"/>
         <circle cx="238" cy="152" r="27" fill="#111" stroke="#252525" stroke-width="1"/>
         <circle cx="238" cy="152" r="7.5" fill="#03a74e"/>
-        <circle cx="238" cy="125" r="2.5" fill="#1e1e1e"/>
-        <circle cx="261" cy="139" r="2.5" fill="#1e1e1e"/>
-        <circle cx="261" cy="165" r="2.5" fill="#1e1e1e"/>
-        <circle cx="238" cy="179" r="2.5" fill="#1e1e1e"/>
-        <circle cx="215" cy="165" r="2.5" fill="#1e1e1e"/>
-        <circle cx="215" cy="139" r="2.5" fill="#1e1e1e"/>
+        <circle cx="238" cy="125" r="2.5" fill="#1e1e1e"/><circle cx="261" cy="139" r="2.5" fill="#1e1e1e"/><circle cx="261" cy="165" r="2.5" fill="#1e1e1e"/>
+        <circle cx="238" cy="179" r="2.5" fill="#1e1e1e"/><circle cx="215" cy="165" r="2.5" fill="#1e1e1e"/><circle cx="215" cy="139" r="2.5" fill="#1e1e1e"/>
         <path d="M124 152 Q160 134 196 152" stroke="#03a74e" stroke-width="2" fill="none"/>
         <rect x="145" y="188" width="30" height="10" rx="2" fill="#181818" stroke="#2a2a2a" stroke-width="1"/>
       </svg>
@@ -187,155 +195,56 @@
 
 <div class="ticker">
   <div class="ticker-inner">
-    <div class="ticker-item">Chaâbi</div>
-    <div class="ticker-item">Gnawa</div>
-    <div class="ticker-item">Jil Jilala</div>
-    <div class="ticker-item">Rai Oranais</div>
-    <div class="ticker-item">Amazigh</div>
-    <div class="ticker-item">Andalous</div>
-    <div class="ticker-item">Nass El Ghiwane</div>
-    <div class="ticker-item">Desert Blues</div>
+    <div class="ticker-item">Chaâbi</div><div class="ticker-item">Gnawa</div>
+    <div class="ticker-item">Jil Jilala</div><div class="ticker-item">Rai Oranais</div>
+    <div class="ticker-item">Amazigh</div><div class="ticker-item">Andalous</div>
+    <div class="ticker-item">Nass El Ghiwane</div><div class="ticker-item">Desert Blues</div>
     <div class="ticker-item">Moroccan Jazz</div>
-    <div class="ticker-item">Chaâbi</div>
-    <div class="ticker-item">Gnawa</div>
-    <div class="ticker-item">Jil Jilala</div>
-    <div class="ticker-item">Rai Oranais</div>
-    <div class="ticker-item">Amazigh</div>
-    <div class="ticker-item">Andalous</div>
-    <div class="ticker-item">Nass El Ghiwane</div>
-    <div class="ticker-item">Desert Blues</div>
+    <div class="ticker-item">Chaâbi</div><div class="ticker-item">Gnawa</div>
+    <div class="ticker-item">Jil Jilala</div><div class="ticker-item">Rai Oranais</div>
+    <div class="ticker-item">Amazigh</div><div class="ticker-item">Andalous</div>
+    <div class="ticker-item">Nass El Ghiwane</div><div class="ticker-item">Desert Blues</div>
     <div class="ticker-item">Moroccan Jazz</div>
   </div>
 </div>
 
+<!-- FEATURED -->
 <section id="articles">
   <div class="container">
     <p class="lbl">Featured Story</p>
     <h2 class="sec-title">LATEST<br>ARTICLES</h2>
-    <div class="feat-grid">
-      <div class="feat-main">
-        <div class="tape-art">
-          <svg width="250" height="155" viewBox="0 0 250 155" fill="none">
-            <rect width="250" height="155" fill="#0d0d0d"/>
-            <rect x="8" y="8" width="234" height="139" rx="4" stroke="#1a1a1a" stroke-width="1"/>
-            <circle cx="66" cy="97" r="38" stroke="#03a74e" stroke-width="1.2"/>
-            <circle cx="66" cy="97" r="22" fill="#0a0a0a" stroke="#181818"/>
-            <circle cx="66" cy="97" r="5" fill="#03a74e"/>
-            <circle cx="184" cy="97" r="38" stroke="#03a74e" stroke-width="1.2"/>
-            <circle cx="184" cy="97" r="22" fill="#0a0a0a" stroke="#181818"/>
-            <circle cx="184" cy="97" r="5" fill="#03a74e"/>
-            <line x1="104" y1="97" x2="146" y2="97" stroke="#03a74e" stroke-width="1.5"/>
-            <rect x="104" y="20" width="42" height="18" rx="2" fill="#111" stroke="#1e1e1e"/>
-            <text x="125" y="32" fill="#03a74e" font-size="7" text-anchor="middle" font-family="monospace" letter-spacing="1">SIDE A</text>
-            <text x="125" y="148" fill="#3a3a3a" font-size="7" text-anchor="middle" font-family="monospace" letter-spacing="2">JIL JILALA · 1978</text>
-          </svg>
-        </div>
-        <span class="itag">Issue No. 01 · Music History</span>
-        <h3>THE GOLDEN AGE OF MOROCCAN CASSETTE CULTURE</h3>
-        <p>Through the souks of Casablanca and the medinas of Fès, the cassette tape democratized music like nothing before. Local artists pressed their voices onto magnetic ribbon, and a nation listened.</p>
-        <a href="#" class="rlink">Read Article →</a>
-      </div>
-      <div class="feat-aside">
-        <div class="sc">
-          <div class="sc-n">02</div>
-          <h4>NASS EL GHIWANE — A TAPE THAT SHOOK A NATION</h4>
-          <p>Revisiting the 1972 recordings that gave protest music its Moroccan voice.</p>
-        </div>
-        <div class="sc">
-          <div class="sc-n">03</div>
-          <h4>GNAWA TRANCE & THE HEALING CEREMONY</h4>
-          <p>The spiritual music of the Gnawa masters, recorded on cassette for the first time.</p>
-        </div>
-        <div class="sc">
-          <div class="sc-n">04</div>
-          <h4>THE AMAZIGH CASSETTE RENAISSANCE</h4>
-          <p>How Tamazight music found its way onto tape and into a diaspora's heart.</p>
-        </div>
-      </div>
+    <div id="featured-area">
+      <!-- Injected by JS -->
     </div>
   </div>
 </section>
 
+<!-- CATEGORIES -->
 <section id="categories" class="bg2s">
   <div class="container">
     <p class="lbl">Browse by Theme</p>
     <h2 class="sec-title">EXPLORE</h2>
     <div class="cat-row">
-      <div class="cat-box">
-        <div class="cat-n">01</div>
-        <div class="cat-name">Artists & Legends</div>
-        <div class="cat-desc">Portraits of the voices that shaped a generation</div>
-      </div>
-      <div class="cat-box">
-        <div class="cat-n">02</div>
-        <div class="cat-name">Tape Reviews</div>
-        <div class="cat-desc">Deep dives into iconic cassette releases</div>
-      </div>
-      <div class="cat-box">
-        <div class="cat-n">03</div>
-        <div class="cat-name">Regional Sounds</div>
-        <div class="cat-desc">From the Atlas Mountains to the Atlantic</div>
-      </div>
-      <div class="cat-box">
-        <div class="cat-n">04</div>
-        <div class="cat-name">The Archive</div>
-        <div class="cat-desc">Lost recordings, rediscovered stories</div>
-      </div>
+      <div class="cat-box"><div class="cat-n">01</div><div class="cat-name">Artists & Legends</div><div class="cat-desc">Portraits of the voices that shaped a generation</div></div>
+      <div class="cat-box"><div class="cat-n">02</div><div class="cat-name">Tape Reviews</div><div class="cat-desc">Deep dives into iconic cassette releases</div></div>
+      <div class="cat-box"><div class="cat-n">03</div><div class="cat-name">Regional Sounds</div><div class="cat-desc">From the Atlas Mountains to the Atlantic</div></div>
+      <div class="cat-box"><div class="cat-n">04</div><div class="cat-name">The Archive</div><div class="cat-desc">Lost recordings, rediscovered stories</div></div>
     </div>
   </div>
 </section>
 
+<!-- ALL ARTICLES -->
 <section>
   <div class="container">
     <p class="lbl">All Articles</p>
     <h2 class="sec-title">FROM THE<br>ARCHIVE</h2>
-    <div class="blog-grid">
-      <div class="bc">
-        <span class="ccat">Artists</span>
-        <div class="cn">01</div>
-        <h4>JIL JILALA & THE SOUND OF MOROCCAN SOUL</h4>
-        <p>How a band from Casablanca redefined the spiritual song for modern Morocco.</p>
-        <div class="cfoot"><span class="cdate">April 2025</span><span class="arr">→</span></div>
-      </div>
-      <div class="bc">
-        <span class="ccat">Culture</span>
-        <div class="cn">02</div>
-        <h4>THE SOUK CASSETTE: MUSIC AT ONE DIRHAM</h4>
-        <p>Before streaming, the marketplace was the playlist. A look at the informal music economy of the 80s.</p>
-        <div class="cfoot"><span class="cdate">March 2025</span><span class="arr">→</span></div>
-      </div>
-      <div class="bc">
-        <span class="ccat">Regional</span>
-        <div class="cn">03</div>
-        <h4>GNAWA TRANCE & THE HEALING CEREMONY</h4>
-        <p>The spiritual music of the Gnawa masters, recorded on cassette for the very first time.</p>
-        <div class="cfoot"><span class="cdate">March 2025</span><span class="arr">→</span></div>
-      </div>
-      <div class="bc">
-        <span class="ccat">Review</span>
-        <div class="cn">04</div>
-        <h4>NASS EL GHIWANE: A TAPE THAT SHOOK A NATION</h4>
-        <p>Revisiting the legendary 1972 recordings that gave protest music its Moroccan voice.</p>
-        <div class="cfoot"><span class="cdate">February 2025</span><span class="arr">→</span></div>
-      </div>
-      <div class="bc">
-        <span class="ccat">Archive</span>
-        <div class="cn">05</div>
-        <h4>THE AMAZIGH CASSETTE RENAISSANCE</h4>
-        <p>How Tamazight music found its way onto tape and into the hearts of a diaspora.</p>
-        <div class="cfoot"><span class="cdate">February 2025</span><span class="arr">→</span></div>
-      </div>
-      <div class="bc">
-        <span class="ccat">History</span>
-        <div class="cn">06</div>
-        <h4>SIDE B: STORIES LEFT ON MAGNETIC TAPE</h4>
-        <p>Unreleased sessions, family recordings, and the private sounds of a country.</p>
-        <div class="cfoot"><span class="cdate">January 2025</span><span class="arr">→</span></div>
-      </div>
+    <div class="blog-grid" id="all-articles-grid">
+      <!-- Injected by JS -->
     </div>
   </div>
 </section>
 
+<!-- ABOUT -->
 <section id="about" class="bg2s">
   <div class="container">
     <p class="lbl">About</p>
@@ -344,7 +253,7 @@
       <div>
         <div class="alogo"><img src="logo.png" alt="Cassetta Maroc" /></div>
         <div class="stats-row">
-          <div class="stat"><div class="stat-n">40+</div><div class="stat-l">Articles</div></div>
+          <div class="stat"><div class="stat-n" id="stat-articles">0</div><div class="stat-l">Articles</div></div>
           <div class="stat"><div class="stat-n">12</div><div class="stat-l">Genres</div></div>
           <div class="stat"><div class="stat-n">80s</div><div class="stat-l">Era Focus</div></div>
         </div>
@@ -352,19 +261,17 @@
       <div class="at">
         <h3>PRESERVING THE MAGNETIC <span>MEMORY</span> OF A CULTURE</h3>
         <p>Cassetta Maroc is an independent journal dedicated to the rich, underexplored history of cassette music in Morocco. From the golden age of Chaâbi and Gnawa masters to the underground fusion scenes of the 90s, we believe these sounds deserve more than silence.</p>
-        <p>Each article is a love letter to the artists, the listeners, and the dusty tape players that kept the music alive through decades of change. We write for the curious, the nostalgic, and the converted.</p>
-        <a href="#articles" class="btn-p" style="margin-top:1rem; display:inline-block;">Read Our Story</a>
+        <p>Each article is a love letter to the artists, the listeners, and the dusty tape players that kept the music alive through decades of change.</p>
+        <a href="admin.html" class="btn-p" style="margin-top:1rem; display:inline-block;">Admin Panel ⚙</a>
       </div>
     </div>
   </div>
 </section>
 
+<!-- SUBSCRIBE -->
 <div class="sub-bg" id="subscribe">
   <div class="sub-inner">
-    <div class="sub-txt">
-      <h2>STAY ON<br>THE TAPE</h2>
-      <p>New articles and rare finds, in your inbox.</p>
-    </div>
+    <div class="sub-txt"><h2>STAY ON<br>THE TAPE</h2><p>New articles and rare finds, in your inbox.</p></div>
     <div class="sub-form">
       <input type="email" placeholder="your@email.com" />
       <button type="button">Subscribe</button>
@@ -377,10 +284,112 @@
   <div class="fcopy">© 2025 Cassetta Maroc · All rights reserved</div>
   <div class="flinks">
     <a href="https://www.instagram.com/cassetta.maroc/" target="_blank">Instagram</a>
+    <a href="admin.html">Admin</a>
     <a href="#">Contact</a>
-    <a href="#">Privacy</a>
   </div>
 </footer>
 
+<!-- ARTICLE READER -->
+<div class="reader-overlay" id="reader" onclick="if(event.target===this)closeReader()">
+  <div class="reader-box">
+    <button class="reader-close" onclick="closeReader()">✕ Close</button>
+    <div class="reader-cat" id="r-cat"></div>
+    <div class="reader-title" id="r-title"></div>
+    <div class="reader-meta" id="r-meta"></div>
+    <div class="reader-body" id="r-body"></div>
+  </div>
+</div>
+
+<script>
+  let articles = [];
+
+  function loadArticles() {
+    try { articles = JSON.parse(localStorage.getItem('cassetta_articles') || '[]'); } catch(e) { articles = []; }
+  }
+
+  function renderFeatured() {
+    const area = document.getElementById('featured-area');
+    if (articles.length === 0) {
+      area.innerHTML = `<div style="border:1px solid var(--dim);padding:4rem;text-align:center;color:var(--dim);font-family:var(--font-m);font-size:0.6rem;letter-spacing:0.2em;">
+        No articles yet. <a href="admin.html" style="color:var(--green)">Go to Admin</a> to write your first one.
+      </div>`;
+      return;
+    }
+    const [first, ...rest] = articles;
+    const sideCards = rest.slice(0, 3).map((a, i) => `
+      <div class="sc" onclick="openArticle('${a.id}')">
+        <div class="sc-n">0${i + 2}</div>
+        <h4>${a.title.toUpperCase()}</h4>
+        <p>${a.description || ''}</p>
+      </div>
+    `).join('');
+
+    area.innerHTML = `
+      <div class="feat-grid">
+        <div class="feat-main">
+          <div class="tape-art">
+            <svg width="250" height="155" viewBox="0 0 250 155" fill="none">
+              <rect width="250" height="155" fill="#0d0d0d"/>
+              <rect x="8" y="8" width="234" height="139" rx="4" stroke="#1a1a1a" stroke-width="1"/>
+              <circle cx="66" cy="97" r="38" stroke="#03a74e" stroke-width="1.2"/>
+              <circle cx="66" cy="97" r="22" fill="#0a0a0a" stroke="#181818"/>
+              <circle cx="66" cy="97" r="5" fill="#03a74e"/>
+              <circle cx="184" cy="97" r="38" stroke="#03a74e" stroke-width="1.2"/>
+              <circle cx="184" cy="97" r="22" fill="#0a0a0a" stroke="#181818"/>
+              <circle cx="184" cy="97" r="5" fill="#03a74e"/>
+              <line x1="104" y1="97" x2="146" y2="97" stroke="#03a74e" stroke-width="1.5"/>
+              <text x="125" y="148" fill="#3a3a3a" font-size="7" text-anchor="middle" font-family="monospace" letter-spacing="2">CASSETTA MAROC</text>
+            </svg>
+          </div>
+          <span class="itag">Featured · ${first.category}</span>
+          <h3 onclick="openArticle('${first.id}')">${first.title.toUpperCase()}</h3>
+          <p>${first.description || ''}</p>
+          <span class="rlink" onclick="openArticle('${first.id}')">Read Article →</span>
+        </div>
+        <div class="feat-aside">${sideCards || '<div class="sc"><div class="sc-n" style="color:var(--dim)">—</div><h4 style="color:var(--dim)">MORE COMING SOON</h4></div>'}</div>
+      </div>
+    `;
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('all-articles-grid');
+    document.getElementById('stat-articles').textContent = articles.length || '0';
+    if (articles.length === 0) {
+      grid.innerHTML = `<div class="no-articles">No articles yet — <a href="admin.html" style="color:var(--green)">write your first one</a></div>`;
+      return;
+    }
+    grid.innerHTML = articles.map((a, i) => `
+      <div class="bc" onclick="openArticle('${a.id}')">
+        <span class="ccat">${a.category}</span>
+        <div class="cn">0${i + 1}</div>
+        <h4>${a.title.toUpperCase()}</h4>
+        <p>${a.description || ''}</p>
+        <div class="cfoot"><span class="cdate">${a.date}</span><span class="arr">→</span></div>
+      </div>
+    `).join('');
+  }
+
+  function openArticle(id) {
+    const a = articles.find(x => x.id === id);
+    if (!a) return;
+    document.getElementById('r-cat').textContent = a.category;
+    document.getElementById('r-title').textContent = a.title.toUpperCase();
+    document.getElementById('r-meta').textContent = a.date + ' · Cassetta Maroc';
+    document.getElementById('r-body').textContent = a.body || '(No content)';
+    document.getElementById('reader').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeReader() {
+    document.getElementById('reader').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeReader(); });
+
+  loadArticles();
+  renderFeatured();
+  renderGrid();
+</script>
 </body>
 </html>
